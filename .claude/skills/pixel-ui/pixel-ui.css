@@ -78,6 +78,7 @@ body {
   -webkit-font-smoothing: none;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 p, small, .px-text {
   font-family: var(--font-text);
   letter-spacing: 0;
@@ -218,17 +219,25 @@ img, canvas, .px-img { image-rendering: pixelated; }
 .px-slot[aria-selected="true"] { background: var(--select); }
 .px-slot img { width: 100%; height: 100%; object-fit: contain; }
 
-/* tabs (closet categories) */
-.px-tabs { display: flex; padding-left: 4px; position: relative; z-index: 1; margin-bottom: calc(var(--b) * -2); }
+/* tabs (closet categories). Behavior (click / arrow keys / show one panel) is in pixel-ui.js.
+   The selected tab rises above the others and overlaps the panel's top edge so the two read as one piece. */
+.px-tabs { display: flex; align-items: flex-end; padding-left: 4px; position: relative; z-index: 1; }
 .px-tab {
   font: inherit; color: var(--text); background: var(--face); border: 0;
-  padding: 6px 14px 4px; margin-top: 4px; cursor: pointer;
+  padding: 6px 14px; cursor: pointer;
   box-shadow:
     inset var(--b) var(--b) var(--hi),
     inset calc(var(--b) * -1) 0 var(--dark),
     inset calc(var(--b) * -2) 0 var(--shadow);
 }
-.px-tab[aria-selected="true"] { margin-top: 0; padding-bottom: 10px; position: relative; z-index: 2; }
+.px-tab:hover:not([aria-selected="true"]) { padding-top: 8px; }
+.px-tab[aria-selected="true"] {
+  padding-top: 12px;                                   /* taller: this is the open tab */
+  padding-bottom: calc(6px + var(--b) * 2);
+  margin: 0 calc(var(--b) * -1) calc(var(--b) * -2);   /* cover the panel's top bevel */
+  font-weight: 700;
+  position: relative; z-index: 2;
+}
 .px-tabpanel { background: var(--face); box-shadow: var(--bevel-window); padding: 12px; }
 
 /* progress / timer bar: chunky blue blocks in a sunken track */

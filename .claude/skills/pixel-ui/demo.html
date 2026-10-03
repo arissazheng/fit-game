@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="pixel-ui.css">
+<script src="pixel-ui.js" defer></script>
 <style>
   .cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(300px, 28%) minmax(0, 1fr); gap: 12px; }
   .left { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: auto; }
@@ -15,6 +16,7 @@
   .stage-win > .px-window__body { flex: 1; min-height: 0; }
   .stage { flex: 1; min-height: 240px; }
   .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .px-slot .item { font-size: 32px; line-height: 1; } /* placeholder sprites until real pixel items exist */
   .stars .px-btn { min-width: 48px; font-size: 22px; }
   .mascot { position: absolute; right: 16px; bottom: 16px; }
   @media (max-width: 860px) {
@@ -45,16 +47,33 @@
             <div class="px-titlebar"><span>Closet.exe</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
             <div class="px-window__body">
               <div>
-                <div class="px-tabs" role="tablist">
-                  <button class="px-tab" aria-selected="true">Tops</button>
-                  <button class="px-tab">Bottoms</button>
-                  <button class="px-tab">Acc</button>
+                <div class="px-tabs" role="tablist" aria-label="Closet categories">
+                  <button class="px-tab" role="tab" id="tab-tops" aria-controls="panel-tops" aria-selected="true">Tops</button>
+                  <button class="px-tab" role="tab" id="tab-bottoms" aria-controls="panel-bottoms">Bottoms</button>
+                  <button class="px-tab" role="tab" id="tab-acc" aria-controls="panel-acc">Acc</button>
                 </div>
-                <div class="px-tabpanel">
+                <div class="px-tabpanel" role="tabpanel" id="panel-tops" aria-labelledby="tab-tops">
                   <div class="slots">
-                    <button class="px-slot"></button><button class="px-slot" aria-selected="true"></button>
-                    <button class="px-slot"></button><button class="px-slot"></button>
-                    <button class="px-slot"></button><button class="px-slot"></button>
+                    <button class="px-slot" title="White tee" aria-label="White tee"><span class="item">👕</span></button>
+                    <button class="px-slot" title="Pink blouse" aria-label="Pink blouse" aria-selected="true"><span class="item">👚</span></button>
+                    <button class="px-slot" title="Denim jacket" aria-label="Denim jacket"><span class="item">🧥</span></button>
+                    <button class="px-slot" title="Black tank top" aria-label="Black tank top"><span class="item">🎽</span></button>
+                  </div>
+                </div>
+                <div class="px-tabpanel" role="tabpanel" id="panel-bottoms" aria-labelledby="tab-bottoms" hidden>
+                  <div class="slots">
+                    <button class="px-slot" title="Baggy jeans" aria-label="Baggy jeans"><span class="item">👖</span></button>
+                    <button class="px-slot" title="Black shorts" aria-label="Black shorts"><span class="item">🩳</span></button>
+                    <button class="px-slot" title="Slip dress" aria-label="Slip dress"><span class="item">👗</span></button>
+                  </div>
+                </div>
+                <div class="px-tabpanel" role="tabpanel" id="panel-acc" aria-labelledby="tab-acc" hidden>
+                  <div class="slots">
+                    <button class="px-slot" title="Shoulder bag" aria-label="Shoulder bag"><span class="item">👜</span></button>
+                    <button class="px-slot" title="Sunglasses" aria-label="Sunglasses"><span class="item">🕶️</span></button>
+                    <button class="px-slot" title="Cap" aria-label="Cap"><span class="item">🧢</span></button>
+                    <button class="px-slot" title="Ring" aria-label="Ring"><span class="item">💍</span></button>
+                    <button class="px-slot" title="Hair bow" aria-label="Hair bow"><span class="item">🎀</span></button>
                   </div>
                 </div>
               </div>
