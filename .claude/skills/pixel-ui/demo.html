@@ -185,8 +185,11 @@
   // A round lasts from Start (in the lobby, index.html) to the podium. Pick one random theme per round.
   // In this prototype, arriving on this page starts a round.
   // In the real game, the host calls startRound() on Start and broadcasts the theme to every player.
+  // The lobby's host picks the theme and end time and sends the same round to every player.
+  var lobbyRound = null;
+  try { lobbyRound = JSON.parse(sessionStorage.getItem('fip.round')); } catch (e) {}
   function startRound() {
-    var t = FIP.pickTheme();
+    var t = lobbyRound || FIP.pickTheme();
     document.getElementById('theme-title').textContent = 'THEME: ' + t.theme;
     document.title = t.theme + ' · Fashion in Pixels';
     return t;
@@ -263,8 +266,8 @@
   // 60s from when players enter this page (the lobby's Start button will send them here).
   // Counting down to a fixed end time keeps every player in sync; in multiplayer the server
   // should broadcast that end time with the theme. Test with a shorter round: demo.html?seconds=10
-  var ROUND_SECONDS = Number(new URLSearchParams(location.search).get('seconds')) || 60;
-  var endsAt = Date.now() + ROUND_SECONDS * 1000;
+  var ROUND_SECONDS = (lobbyRound && lobbyRound.seconds) || Number(new URLSearchParams(location.search).get('seconds')) || 60;
+  var endsAt = (lobbyRound && lobbyRound.endsAt) || Date.now() + ROUND_SECONDS * 1000;
   var bar = document.getElementById('timer-bar');
   var text = document.getElementById('timer-text');
 

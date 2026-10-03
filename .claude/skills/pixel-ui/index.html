@@ -11,6 +11,8 @@
 <script src="pixel-ui.js" defer></script>
 <script src="avatar.js"></script>
 <script src="game.js"></script>
+<script src="themes.js"></script>
+<script src="room.js"></script>
 <style>
   .cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(300px, 28%) minmax(0, 1fr); gap: 12px; }
   .left { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: auto; }
@@ -37,8 +39,14 @@
   #avatar { display: block; position: relative; z-index: 1; }
   .nametag { position: relative; z-index: 1; margin-top: 8px; padding: 2px 10px; background: var(--select); color: var(--select-text); font-size: 16px; }
   .players { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .seat { padding: 4px 10px; box-shadow: var(--bevel-status); font-size: 15px; }
-  .seat--empty { color: var(--text-disabled); }
+  .seats { display: flex; flex-wrap: wrap; gap: 6px; }
+  .seat { min-width: 0; min-height: 32px; padding: 4px 10px; font-size: 15px; }
+  .seat.is-waiting { color: var(--text-disabled); cursor: default; }
+  .seat--empty { padding: 4px 10px; min-height: 32px; display: inline-flex; align-items: center; box-shadow: var(--bevel-status); color: var(--text-disabled); font-size: 15px; }
+  .check { color: #008000; font-weight: 700; }
+  .seat[aria-pressed="true"] .check { color: #7fff7f; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .locked { opacity: 0.6; pointer-events: none; }
 
   @media (max-width: 860px) {
     .cols { grid-template-columns: minmax(0, 1fr); }
@@ -93,7 +101,7 @@
       </div>
 
       <div class="px-window stage-win">
-        <div class="px-titlebar"><span>Lobby.exe · Waiting for players</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
+        <div class="px-titlebar"><span id="lobby-title">Lobby.exe · Waiting for players</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
         <div class="px-window__body">
           <div class="px-well stage" id="avatar-stage">
             <div class="floor" aria-hidden="true"></div>
@@ -102,12 +110,12 @@
           </div>
           <div class="players" aria-label="Players in this room">
             <span class="px-label">Players</span>
-            <span class="seat" id="seat-you">You</span>
-            <span class="seat seat--empty">Waiting...</span>
-            <span class="seat seat--empty">Waiting...</span>
-            <span class="seat seat--empty">Waiting...</span>
+            <div class="seats" id="seats"></div>
           </div>
-          <button class="px-btn px-btn--wide" id="start-btn">▶ Start game</button>
+          <div class="actions">
+            <button class="px-btn px-btn--wide" id="ready-btn" aria-pressed="false">Ready</button>
+            <button class="px-btn px-btn--wide" id="start-btn" disabled>▶ Start game</button>
+          </div>
         </div>
       </div>
     </div>
@@ -126,16 +134,84 @@
 <script>
   var A = FIPAvatar;
   var look = FIP.store.getAvatar();
+  var ready = false;
+  var viewing = null;                     // player id shown on the stage (null = me)
   var canvas = document.getElementById('avatar');
   var stage = document.getElementById('avatar-stage');
   var nameInput = document.getElementById('avatar-name');
+  var statusMsg = document.getElementById('status-msg');
+  var readyBtn = document.getElementById('ready-btn');
+  var startBtn = document.getElementById('start-btn');
 
-  function draw() {
-    A.render(canvas, look);                 // lobby = plain outfit, no accessories
-    var name = look.name.trim() || 'You';
-    document.getElementById('nametag').textContent = name;
-    document.getElementById('seat-you').textContent = name + ' (you)';
+  // ---------- room ----------
+  var room = FIP.joinRoom({
+    me: { name: look.name, look: look, ready: false },
+    onChange: renderRoom,
+    onStart: goToBuilder
+  });
+
+  function displayName(p) { return (p.name || '').trim() || 'Player'; }
+
+  function renderRoom(players) {
+    var seats = document.getElementById('seats');
+    seats.innerHTML = '';
+    if (viewing && !players.some(function (p) { return p.id === viewing && p.ready; })) viewing = null;
+
+    players.forEach(function (p) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'px-btn seat';
+      var label = displayName(p) + (p.isMe ? ' (you)' : '') + (p.isHost ? ' ★' : '');
+      if (p.ready) {
+        var check = document.createElement('span'); check.className = 'check'; check.textContent = '✓ ';
+        btn.append(check, document.createTextNode(label));
+      } else {
+        btn.textContent = label;
+      }
+      var shown = viewing ? viewing === p.id : p.isMe;
+      btn.setAttribute('aria-pressed', shown ? 'true' : 'false');
+      if (!p.isMe && !p.ready) {
+        btn.classList.add('is-waiting');
+        btn.title = displayName(p) + ' is still customizing';
+      } else {
+        btn.title = p.isMe ? 'Show your avatar' : 'View ' + displayName(p) + "'s avatar";
+        btn.addEventListener('click', function () { viewing = p.isMe ? null : p.id; renderRoom(room.players()); });
+      }
+      seats.appendChild(btn);
+    });
+    var empty = Math.max(0, 4 - players.length);   // always show at least 4 seats
+    for (var i = 0; i < empty; i++) {
+      var e = document.createElement('span'); e.className = 'seat--empty'; e.textContent = 'Waiting...'; seats.appendChild(e);
+    }
+
+    var readyCount = players.filter(function (p) { return p.ready; }).length;
+    var allReady = readyCount === players.length;
+    var meP = players.filter(function (p) { return p.isMe; })[0];
+    var host = players[0];
+    document.getElementById('player-count').textContent =
+      players.length + ' / ' + FIP.MAX_PLAYERS + ' players · ' + readyCount + ' ready';
+
+    startBtn.disabled = !(meP.isHost && allReady);
+    if (!meP.ready) statusMsg.textContent = 'Customize your avatar, then press Ready';
+    else if (!allReady) statusMsg.textContent = 'Waiting for everyone to press Ready (' + readyCount + ' / ' + players.length + ')';
+    else if (meP.isHost) statusMsg.textContent = 'Everyone is ready. Press Start game!';
+    else statusMsg.textContent = 'Everyone is ready. Waiting for ' + displayName(host) + ' (host) to start';
+
+    drawStage(players);
+  }
+
+  function drawStage(players) {
+    var p = viewing && players.filter(function (x) { return x.id === viewing; })[0];
+    var who = p ? p : { name: look.name, look: look, ready: ready, isMe: true };
+    A.render(canvas, who.look);           // lobby = plain outfit, no accessories
+    document.getElementById('nametag').textContent = (who.ready ? '✓ ' : '') + (displayName(who) === 'Player' && who.isMe ? 'You' : displayName(who));
+    document.getElementById('lobby-title').textContent = p ? 'Lobby.exe · Viewing ' + displayName(p) : 'Lobby.exe · Your avatar';
+  }
+
+  // ---------- avatar builder ----------
+  function changed() {
     FIP.store.setAvatar(look);
+    room.update({ name: look.name, look: Object.assign({}, look) });
   }
 
   function makeChoices(container, items, key, render) {
@@ -143,7 +219,7 @@
       var btn = document.createElement('button');
       btn.type = 'button';
       render(btn, item);
-      btn.addEventListener('click', function () { look[key] = item.hex || item.id; sync(); draw(); });
+      btn.addEventListener('click', function () { look[key] = item.hex || item.id; sync(); viewing = null; changed(); });
       btn.dataset.value = item.hex || item.id;
       container.appendChild(btn);
     });
@@ -169,11 +245,27 @@
     btn.className = 'px-btn'; btn.textContent = item.name;
   });
 
-  nameInput.addEventListener('input', function () { look.name = nameInput.value; draw(); });
+  nameInput.addEventListener('input', function () { look.name = nameInput.value; changed(); });
   document.getElementById('shuffle-btn').addEventListener('click', function () {
     var pick = function (list) { return list[Math.floor(Math.random() * list.length)]; };
     look.skin = pick(A.SKIN_TONES).hex; look.hair = pick(A.HAIR_COLORS).hex; look.style = pick(A.HAIRSTYLES).id;
-    sync(); draw();
+    sync(); viewing = null; changed();
+  });
+
+  // ---------- ready ----------
+  // Ready locks your avatar and shows a check next to your name. Press again to keep customizing.
+  readyBtn.addEventListener('click', function () {
+    if (!ready && !look.name.trim()) {
+      statusMsg.textContent = 'Enter a name before pressing Ready';
+      nameInput.focus();
+      return;
+    }
+    ready = !ready;
+    readyBtn.setAttribute('aria-pressed', ready ? 'true' : 'false');
+    readyBtn.textContent = ready ? '✓ Ready (click to edit)' : 'Ready';
+    document.querySelector('.left .px-window').classList.toggle('locked', ready);
+    nameInput.disabled = ready;
+    room.update({ ready: ready });
   });
 
   new ResizeObserver(function () { A.fit(canvas, stage, 16, 90); }).observe(stage);
@@ -182,24 +274,29 @@
     zone: document.getElementById('photo-zone'),
     thumbs: document.getElementById('photo-thumbs'),
     count: document.getElementById('photo-count'),
-    status: document.getElementById('status-msg')
+    status: statusMsg
   });
 
-  // Start: everyone moves to the outfit builder, where the round's theme and 1:00 timer begin.
-  // Real game: only the host's Start counts, and the server sends every player to the builder together.
-  document.getElementById('start-btn').addEventListener('click', function () {
-    if (!look.name.trim()) {
-      document.getElementById('status-msg').textContent = 'Enter a name before starting';
-      nameInput.focus();
-      return;
-    }
-    FIP.store.setAvatar(look);
-    try { sessionStorage.setItem('fip.roundStarted', String(Date.now())); } catch (e) { /* storage blocked */ }
-    location.href = 'demo.html' + location.search;   // keeps test params like ?seconds=10
+  // ---------- start ----------
+  // The host starts once everyone is ready. Every player gets the same theme and end time,
+  // then moves to the outfit builder together. Test a short round with ?seconds=10.
+  startBtn.addEventListener('click', function () {
+    var seconds = Number(new URLSearchParams(location.search).get('seconds')) || 60;
+    var t = FIP.pickTheme();
+    room.start({ theme: t.theme, category: t.category, endsAt: Date.now() + seconds * 1000 + 1000, seconds: seconds });
   });
+
+  function goToBuilder(round) {
+    FIP.store.setAvatar(look);
+    try {
+      sessionStorage.setItem('fip.round', JSON.stringify(round));
+      sessionStorage.setItem('fip.roundStarted', String(Date.now()));
+    } catch (e) { /* storage blocked */ }
+    location.href = 'demo.html' + location.search;
+  }
 
   sync();
-  draw();
+  renderRoom(room.players());
 </script>
 </body>
 </html>
