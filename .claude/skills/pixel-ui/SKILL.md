@@ -78,10 +78,10 @@ new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
 - **Login:** teal desktop with a small centered window `Fashion in Pixels v1.0`. Inside: a `.px-label` EMAIL, a `.px-input`, and an `OK` / `Log in` `.px-btn`. Taskbar shows `Start` + clock.
 - **Lobby:** a big `Runway.exe` window whose body is a `.px-well` showing the pixel stage with players standing on it, each with a name tag. Side window `Players` lists who's in the room. Desktop icons: `Closet`, `Marketplace`, `readme` (how to play). The host gets a `.px-btn--wide` `START SHOW`. When the show starts, the theme appears in a `.px-bubble` from the mascot.
 - **Upload closet:** mirror the reference layout. Left `Upload.exe` window with options, right `Preview` well with "Drag & Drop or Click", `.px-progress` while extracting, status bar `3 / 10 photos · 12 items found`.
-- **Dressing room (60s):**
+- **Outfit builder (60s):** the screen where each player builds their outfit for the round's theme. No star rating, settings, or colorway here; voting happens later in the fashion show.
   - Main window title is the theme, e.g. `THEME: Y2K Pop Star`.
-  - Left: `.px-well` with your avatar at integer scale.
-  - Right: `Closet` window with `.px-tabs` (Tops / Bottoms / Dresses / Shoes / Accessories) and a `.px-slot` grid.
+  - Left column: `Closet.exe` window with `.px-tabs` (Tops / Bottoms / Dresses / Acc) and a `.px-slot` grid, then `Upload.exe` (photo dropzone, up to 10 photos) underneath.
+  - Right: the theme window, whose big `.px-well` shows your avatar at integer scale being dressed, plus a `.px-btn--wide` `LOCK IN OUTFIT`.
   - Top: `.px-progress` timer.
   - Status bar shows the time left and your coin count.
 - **Fashion show / voting:** `Runway.exe` well, one player at a time (back sprite, then a stepped swap to front). Below: five star buttons in a `.px-btn-row`, selected ones navy. Status bar: `Now walking: arissa · 2 / 5`.

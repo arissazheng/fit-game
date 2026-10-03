@@ -19,7 +19,6 @@
   .px-tab { padding-left: 10px; padding-right: 10px; }
   .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .px-slot .item { font-size: 32px; line-height: 1; } /* placeholder sprites until real pixel items exist */
-  .stars .px-btn { min-width: 48px; font-size: 22px; }
   .upload-drop { height: 96px; }
   .upload-drop .px-well__empty { font-size: 16px; }
   .thumbs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
@@ -90,19 +89,6 @@
                   </div>
                 </div>
               </div>
-              <span class="px-label">Colorway</span>
-              <div class="px-btn-grid">
-                <button class="px-btn px-swatch" aria-pressed="true"><span class="px-swatch__colors"><i style="background:#f6c1d1"></i><i style="background:#e0708e"></i><i style="background:#b8345b"></i><i style="background:#fff"></i></span>Sakura</button>
-                <button class="px-btn px-swatch"><span class="px-swatch__colors"><i style="background:#0f380f"></i><i style="background:#306230"></i><i style="background:#8bac0f"></i><i style="background:#9bbc0f"></i></span>Game Boy</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="px-window is-inactive">
-            <div class="px-titlebar"><span>Settings</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
-            <div class="px-window__body">
-              <label class="px-check"><input type="checkbox" checked> SOUND ON / OFF</label>
-              <input class="px-input" placeholder="you@email.com">
             </div>
           </div>
 
@@ -126,9 +112,6 @@
             <div class="px-well px-dropzone stage" id="upload-zone" aria-label="Upload outfit photos">
               <input type="file" id="upload-input" accept="image/*" multiple>
               <div class="px-well__empty">🖼<br>Drag &amp; Drop<br>or Click</div>
-            </div>
-            <div class="px-btn-row stars">
-              <button class="px-btn" aria-pressed="true">★</button><button class="px-btn" aria-pressed="true">★</button><button class="px-btn" aria-pressed="true">★</button><button class="px-btn">★</button><button class="px-btn">★</button>
             </div>
             <button class="px-btn px-btn--wide">↓ Lock in outfit</button>
           </div>
