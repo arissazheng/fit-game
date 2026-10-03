@@ -1,7 +1,9 @@
 # API
 
-Base URL in dev: `http://localhost:4000`. CORS is enabled for the client dev
-origin (`http://localhost:5173`) with credentials.
+Base URL in dev: `http://localhost:4000`. CORS reflects the request's
+`Origin` (with credentials) rather than pinning one, since the live
+prototype (`.claude/skills/pixel-ui/*.html`) is static HTML that can be
+opened from any origin, including `file://`.
 
 Static sprite files are served under `/assets/...` (see each section for the
 exact prefix).
@@ -44,24 +46,22 @@ Response `400` (friendly, player-facing):
 
 ---
 
-## Avatar preview
+## Avatar
 
-### `POST /api/avatar/preview`
+The live prototype's avatar (`.claude/skills/pixel-ui/avatar.js`) is a
+procedural chibi renderer driven by a `Look` (skin/hair/hairstyle, picked in
+the lobby) and an `Outfit` (`top`/`bottom`/`dress`/`accessories`, as free-text
+item names — colored by keyword match "until real extracted sprites replace
+them"). `shared/src/avatarSpec.ts` mirrors its constants (`SKIN_TONES`,
+`HAIR_COLORS`, `HAIRSTYLES`, `CANVAS`) and the dress/top/bottom exclusivity
+rule (`applyEquip`) for any backend code that needs them. There's no
+sprite-compositing endpoint — the avatar itself has no server-side
+representation yet. That arrives with step 5/6 (real extracted garment
+sprites) and step 7 (persisted user avatars).
 
-`application/json`: `{ "photoId": "<id from /api/uploads>" }`
-
-> Stand-in for the real step-7 "user -> avatar" pipeline (skin/hair tinting,
-> true back view). For now: cover-crops the photo to the avatar's aspect
-> ratio and runs it through the same `pixelize()` module as everything else,
-> so there's a real, visible photo -> pixel-avatar result. No DB row yet —
-> regenerate on demand.
-
-Response `200`:
-```json
-{ "url": "/assets/processed/<photoId>-body.png" }
-```
-
-Response `404` / `500`: friendly, player-facing `{ "error": "..." }`.
+Photos uploaded via `/api/uploads` are already wired into
+`game.js`'s `FIP.mountUpload` (fire-and-forget, alongside its existing
+localStorage persistence) so they survive beyond one browser.
 
 ---
 

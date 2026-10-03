@@ -1,10 +1,23 @@
 // Fashion in Pixels — shared game state for the prototype pages (lobby, outfit builder, runway).
 // Stores the player's avatar look and uploaded photos in this browser's localStorage so they carry
-// from the lobby into the outfit builder. The real multiplayer game will sync these through the server.
+// from the lobby into the outfit builder. Photos are also synced to the backend (POST
+// /api/uploads, see fit-game/API.md) so they survive beyond this browser; look/outfit stay
+// localStorage-only until real auth + inventory (fit-game server steps 7-8) land.
 (function (root) {
   var FIP = root.FIP = root.FIP || {};
   var KEYS = { avatar: 'fip.avatar', photos: 'fip.photos' };
   var MAX_PHOTOS = 10;
+  var API_BASE = root.FIP_API_BASE || 'http://localhost:4000';
+
+  // Best-effort: persist the original files server-side too (POST /api/uploads),
+  // alongside the localStorage copy below. Failures here don't block the UI —
+  // the shrunk localStorage copy already carries photos across pages.
+  function syncToServer(files) {
+    var formData = new FormData();
+    files.forEach(function (f) { formData.append('photos', f); });
+    fetch(API_BASE + '/api/uploads', { method: 'POST', body: formData })
+      .catch(function (err) { console.warn('Could not sync photos to the server:', err); });
+  }
 
   function read(key, fallback) {
     try { var v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; }
@@ -73,6 +86,7 @@
       var skipped = e.detail.files.length - files.length;
       if (!files.length) { say('Closet is full (max ' + MAX_PHOTOS + ' photos). Remove one to add more.'); return; }
       say('Importing ' + files.length + (files.length === 1 ? ' photo...' : ' photos...'));
+      syncToServer(files);
       Promise.all(files.map(function (f) { return shrink(f, 360); })).then(function (added) {
         photos = photos.concat(added);
         var saved = FIP.store.setPhotos(photos);

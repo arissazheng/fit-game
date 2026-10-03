@@ -7,11 +7,13 @@
     "shared"
   ],
   "scripts": {
-    "dev": "concurrently -n server,client -c blue,green \"npm run dev -w server\" \"npm run dev -w client\"",
+    "dev": "concurrently -n server,client,game -c blue,green,magenta \"npm run dev -w server\" \"npm run dev -w client\" \"npm run dev:game\"",
+    "dev:game": "serve .claude/skills/pixel-ui -l 8080",
     "seed": "npm run seed -w server",
     "seed:marketplace": "npm run seed:marketplace -w server"
   },
   "devDependencies": {
-    "concurrently": "^9.0.0"
+    "concurrently": "^9.0.0",
+    "serve": "^14.2.0"
   }
 }

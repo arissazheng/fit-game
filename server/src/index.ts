@@ -2,7 +2,6 @@ import { mkdir } from 'node:fs/promises'
 import express from 'express'
 import { config } from './config.ts'
 import './db/db.ts'
-import { avatarPreviewRouter } from './routes/avatarPreview.ts'
 import { uploadsRouter } from './routes/uploads.ts'
 
 await mkdir(config.uploadsDir, { recursive: true })
@@ -12,8 +11,11 @@ const app = express()
 
 app.use(express.json())
 
+// The live prototype (.claude/skills/pixel-ui/*.html) is plain static HTML,
+// opened from whatever origin/port happens to be serving it (or none, via
+// file://) — reflect the request's origin rather than pinning one.
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5173')
+  res.header('Access-Control-Allow-Origin', req.headers.origin ?? '*')
   res.header('Access-Control-Allow-Credentials', 'true')
   res.header('Access-Control-Allow-Headers', 'Content-Type')
   next()
@@ -27,7 +29,6 @@ app.get('/api/health', (_req, res) => {
 })
 
 app.use('/api/uploads', uploadsRouter)
-app.use('/api/avatar/preview', avatarPreviewRouter)
 
 app.listen(config.port, () => {
   console.log(`fit-game server listening on http://localhost:${config.port}`)

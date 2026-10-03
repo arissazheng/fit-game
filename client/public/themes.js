@@ -1,1 +1,0 @@
-../../.claude/skills/pixel-ui/themes.js

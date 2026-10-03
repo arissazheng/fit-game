@@ -6,9 +6,6 @@ export function DevHome() {
         <li>
           <a href="#/dev/pixelize">pixelize</a>
         </li>
-        <li>
-          <a href="#/">back to the app</a>
-        </li>
       </ul>
     </div>
   )

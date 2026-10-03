@@ -1,57 +1,47 @@
-export type Slot =
-  | 'top'
-  | 'bottom'
-  | 'dress'
-  | 'outerwear'
-  | 'shoes'
-  | 'head'
-  | 'face'
-  | 'neck'
-  | 'bag'
+/**
+ * Mirrors the data model actually used by the live prototype
+ * (.claude/skills/pixel-ui/avatar.js + game.js), not an independently
+ * designed spec — garments are free-text names (avatar.js colors them by
+ * keyword match "until real extracted sprites replace them"), and the
+ * avatar itself is a procedurally-drawn chibi, not a sprite stack.
+ */
 
-export type LayerKey = 'body' | Slot
+export type Slot = 'top' | 'bottom' | 'dress' | 'accessory'
 
-export interface SlotBox {
-  x: number
-  y: number
-  w: number
-  h: number
+/** Documentation only — matches avatar.js's actual (hardcoded) draw order. */
+export type LayerKey = 'backHair' | 'body' | 'shoes' | 'bottom' | 'top' | 'dress' | 'face' | 'frontHair' | 'accessories'
+
+export interface Look {
+  name: string
+  /** hex */
+  skin: string
+  /** hex */
+  hair: string
+  /** hairstyle id, e.g. 'braids' — see HAIRSTYLES */
+  style: string
 }
 
-export interface CanvasSpec {
-  width: number
-  height: number
+export interface Outfit {
+  theme?: string
+  top: string | null
+  bottom: string | null
+  dress: string | null
+  accessories: string[]
+  savedAt?: string
 }
 
-export interface AvatarSpec {
-  canvas: CanvasSpec
-  slotBoxes: Record<Slot, SlotBox>
-  layerOrder: LayerKey[]
-}
-
+/** A real garment once extraction (step 5) exists — not yet consumed by the renderer. */
 export interface Item {
   id: string
   slot: Slot
-  name?: string
-  /** 64x128 transparent PNG, front-facing, already positioned per SLOT_BOXES */
-  spritePath: string
+  name: string
+  /** 64x96 transparent PNG, once sprite rendering replaces the name-based placeholder look */
+  spritePath?: string
   originalCropPath?: string
   /** 2-3 dominant hex colors */
   colors?: string[]
   source: 'closet' | 'marketplace'
   ownerId?: string
-}
-
-export type Facing = 'front' | 'back'
-
-export interface BodySprite {
-  front: string
-  back: string
-}
-
-export interface Outfit {
-  body: BodySprite
-  equipped: Partial<Record<Slot, Item>>
 }
 
 export interface User {
