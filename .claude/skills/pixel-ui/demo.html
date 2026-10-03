@@ -18,6 +18,12 @@
   .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .px-slot .item { font-size: 32px; line-height: 1; } /* placeholder sprites until real pixel items exist */
   .stars .px-btn { min-width: 48px; font-size: 22px; }
+  .upload-drop { height: 96px; }
+  .upload-drop .px-well__empty { font-size: 16px; }
+  .thumbs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+  .thumbs:empty { display: none; }
+  .thumbs .px-slot { padding: 3px; }
+  .thumbs img { object-fit: cover; }
   .mascot { position: absolute; right: 16px; bottom: 16px; z-index: 1; }
   @media (max-width: 860px) {
     .cols { grid-template-columns: minmax(0, 1fr); }
@@ -92,6 +98,18 @@
               <input class="px-input" placeholder="you@email.com">
             </div>
           </div>
+
+          <div class="px-window">
+            <div class="px-titlebar"><span>Upload.exe</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
+            <div class="px-window__body">
+              <span class="px-label">Your photos <span id="photo-count">0 / 10</span></span>
+              <div class="px-well px-dropzone upload-drop" id="photo-zone" data-preview="none" aria-label="Upload outfit photos">
+                <input type="file" id="photo-input" accept="image/*" multiple>
+                <div class="px-well__empty">🖼<br>Drag &amp; Drop<br>or Click</div>
+              </div>
+              <div class="thumbs" id="photo-thumbs"></div>
+            </div>
+          </div>
         </div>
 
         <div class="px-window stage-win">
@@ -126,6 +144,29 @@
   document.getElementById('upload-zone').addEventListener('px-files', function (e) {
     var n = e.detail.files.length;
     document.getElementById('status-msg').textContent = n + (n === 1 ? ' photo' : ' photos') + ' imported: ' + e.detail.files[0].name;
+  });
+
+  // Upload.exe: keep up to 10 photos and show them as thumbnails
+  var photos = [];
+  document.getElementById('photo-zone').addEventListener('px-files', function (e) {
+    var room = 10 - photos.length;
+    var added = e.detail.files.slice(0, room);
+    added.forEach(function (file) {
+      photos.push(file);
+      var slot = document.createElement('div');
+      slot.className = 'px-slot';
+      slot.title = file.name;
+      var img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.alt = file.name;
+      slot.appendChild(img);
+      document.getElementById('photo-thumbs').appendChild(slot);
+    });
+    document.getElementById('photo-count').textContent = photos.length + ' / 10';
+    var skipped = e.detail.files.length - added.length;
+    document.getElementById('status-msg').textContent = skipped
+      ? 'Closet is full: ' + skipped + ' photo' + (skipped === 1 ? '' : 's') + ' skipped (max 10)'
+      : added.length + (added.length === 1 ? ' photo' : ' photos') + ' added to your closet';
   });
 </script>
 </body>

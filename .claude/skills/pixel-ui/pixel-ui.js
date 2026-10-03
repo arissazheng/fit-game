@@ -36,7 +36,7 @@
 
   // Dropzones: <div class="px-well px-dropzone"><input type="file" accept="image/*" multiple> ...</div>
   // Clicking anywhere in the box (or Enter/Space when focused) opens the file picker; dropping files also works.
-  // The first image is previewed in the box. Listen for the "px-files" event to receive the File list:
+  // The first image is previewed in the box (add data-preview="none" to skip that and render your own). Listen for the "px-files" event to receive the File list:
   //   zone.addEventListener('px-files', function (e) { e.detail.files; });
   function initDropzones(root) {
     (root || document).querySelectorAll('.px-dropzone').forEach(function (zone) {
@@ -51,6 +51,10 @@
       function handle(fileList) {
         var files = Array.prototype.filter.call(fileList || [], function (f) { return /^image\//.test(f.type); });
         if (!files.length) return;
+        if (zone.dataset.preview === 'none') {
+          zone.dispatchEvent(new CustomEvent('px-files', { bubbles: true, detail: { files: files } }));
+          return;
+        }
         if (url) URL.revokeObjectURL(url);
         url = URL.createObjectURL(files[0]);
         if (!preview) {
