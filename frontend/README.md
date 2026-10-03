@@ -6,7 +6,7 @@ backend (`/server`) at `http://localhost:4000` — see the root `README.md`.
 
 ## Pixel UI: retro desktop
 
-The whole game looks like an old desktop computer: teal background, silver
+The whole game looks like an old desktop computer: pastel pink background, silver
 beveled windows with navy-to-blue gradient title bars, chunky 3D buttons, sunken
 black preview areas, a status bar, and a taskbar along the bottom. The game plays
 full screen: one big main window, centered on the desktop, fills everything
@@ -22,7 +22,7 @@ new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
 | Element | Spec |
 |---|---|
 | Layout | full-screen `.px-desktop` grid: desktop icons in a narrow left column, one centered `.px-window--main` (max 1600px wide, full height above the taskbar), and an empty mirror column on the right so the window sits truly centered. Child windows inside it share the space with grid/flex, and the stage well stretches to fill the rest. |
-| Desktop background | flat teal `#008080` (`--desk`) |
+| Desktop background | flat pastel pink `#f7c8d9` (`--desk`); desktop icon labels in deep plum `#4a2338` (`--desk-text`) |
 | Window / button face | silver `#c0c0c0` (`--face`) |
 | Bevels | 2-line inset shadows: white/light on top-left, gray/near-black on bottom-right. Raised for buttons and windows, inverted (sunken) for inputs, wells, slots, and pressed buttons. Use the `--bevel-*` tokens. |
 | Title bar | left-to-right gradient navy `#000080` → blue `#1084d0`, white text, `_ □ ×` controls on the right. Inactive windows use a gray gradient. |
@@ -48,7 +48,7 @@ new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
    - **Google Sans** (`--font-text`) only for paragraphs, help text, fine print, form inputs, and errors. Applied automatically to `p`, `small`, `.px-text`, and `.px-input`.
    - No other fonts.
 4. **Pixel art stays pixel art.** All avatars, clothing sprites, and stage art use `image-rendering: pixelated` (`.px-img`) and integer scaling (2×, 3×, 4×).
-5. **Color discipline.** Chrome uses only the silver/navy/teal tokens. Bright color belongs to the pixel art (avatars, clothes, palette swatches), not the UI.
+5. **Color discipline.** Chrome uses only the silver/navy/pink tokens. Bright color belongs to the pixel art (avatars, clothes, palette swatches), not the UI.
 6. **Motion is choppy and rare.** Use `steps()` timing, short durations, and things like window pop-ins, a blinking caret, or a step-by-step progress fill. Respect `prefers-reduced-motion`.
 
 ## Components (`pixel-ui.css`)
@@ -76,7 +76,7 @@ new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
 
 ## Mapping game screens to the desktop
 
-- **Login:** teal desktop with a small centered window `Fit Game v1.0`. Inside: a `.px-label` EMAIL, a `.px-input`, and an `OK` / `Log in` `.px-btn`. Taskbar shows the howto button.
+- **Login:** pastel pink desktop with a small centered window `Fit Game v1.0`. Inside: a `.px-label` EMAIL, a `.px-input`, and an `OK` / `Log in` `.px-btn`. Taskbar shows the howto button.
 - **Lobby (`index.html`, the first page):** left column `Avatar.exe` (name, skin tone swatches, hair color swatches, hairstyle buttons, Shuffle) and `Upload.exe` (up to 10 outfit photos). Right: `Lobby.exe` well showing your avatar on the runway floor with a name tag, a players row, and `▶ START GAME`. In the lobby everyone wears the plain outfit (black tank + shorts, no accessories). Start sends all players to the outfit builder.
 - **Avatars:** one shared chibi body for everyone, drawn by `avatar.js` on a 64×96 canvas (big head, closed happy eyes, blush, 1px outline in a darker shade of each color). Only skin tone, hair color, and hairstyle vary. Always render through `FIPAvatar.render()` and scale with `FIPAvatar.fit()` (whole numbers only). `game.js` keeps the look and photos between pages.
 - **Upload closet:** mirror the reference layout. Left `Upload.exe` window with options, right `Preview` well with "Drag & Drop or Click", `.px-progress` while extracting, status bar `3 / 10 photos · 12 items found`.

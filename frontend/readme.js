@@ -68,7 +68,7 @@
 
     var css = document.createElement('style');
     css.textContent =
-      '.readme-overlay { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 16px; background: rgba(0, 40, 40, 0.35); }' +
+      '.readme-overlay { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 16px; background: rgba(74, 35, 56, 0.35); }' +
       '.readme-window { width: min(640px, 100%); max-height: min(80vh, 720px); }' +
       '.readme-text { flex: 1; min-height: 0; margin: 4px; padding: 12px 16px; background: #fff; box-shadow: var(--bevel-sunken);' +
         ' font-family: var(--font-pixel); font-size: 16px; line-height: 1.5; letter-spacing: 0.02em; }' +
