@@ -71,12 +71,12 @@ new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
 | Tabs (closet categories) | `.px-tabs[role=tablist]` > `button.px-tab[role=tab][aria-controls]`, one `.px-tabpanel[role=tabpanel]` per tab. Include [`pixel-ui.js`](./pixel-ui.js), which wires click and arrow-key switching. The open tab is taller and bold and joins the panel. Only the open tab's panel is visible (others get `hidden`), so each category shows only its own items. |
 | Timer / progress | `.px-progress` > `i`, set `--value` 0..1. Add `.is-danger` in the last 10s |
 | Status bar | `.px-statusbar` > `span` cells |
-| Taskbar | `.px-taskbar` > `.px-btn.px-taskbar__task` … (the `readme` task opens the rules via `readme.js` / `[data-readme]`) |
+| Taskbar | `.px-taskbar` > `.px-btn.px-taskbar__task` … (the `howto` task opens the rules via `readme.js` / `[data-readme]`) |
 | Mascot / host speech | `.px-bubble` |
 
 ## Mapping game screens to the desktop
 
-- **Login:** teal desktop with a small centered window `Fit Game v1.0`. Inside: a `.px-label` EMAIL, a `.px-input`, and an `OK` / `Log in` `.px-btn`. Taskbar shows the readme button.
+- **Login:** teal desktop with a small centered window `Fit Game v1.0`. Inside: a `.px-label` EMAIL, a `.px-input`, and an `OK` / `Log in` `.px-btn`. Taskbar shows the howto button.
 - **Lobby (`index.html`, the first page):** left column `Avatar.exe` (name, skin tone swatches, hair color swatches, hairstyle buttons, Shuffle) and `Upload.exe` (up to 10 outfit photos). Right: `Lobby.exe` well showing your avatar on the runway floor with a name tag, a players row, and `▶ START GAME`. In the lobby everyone wears the plain outfit (black tank + shorts, no accessories). Start sends all players to the outfit builder.
 - **Avatars:** one shared chibi body for everyone, drawn by `avatar.js` on a 64×96 canvas (big head, closed happy eyes, blush, 1px outline in a darker shade of each color). Only skin tone, hair color, and hairstyle vary. Always render through `FIPAvatar.render()` and scale with `FIPAvatar.fit()` (whole numbers only). `game.js` keeps the look and photos between pages.
 - **Upload closet:** mirror the reference layout. Left `Upload.exe` window with options, right `Preview` well with "Drag & Drop or Click", `.px-progress` while extracting, status bar `3 / 10 photos · 12 items found`.

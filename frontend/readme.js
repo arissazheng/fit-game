@@ -1,5 +1,5 @@
-// Fit Game — readme.txt window with the game rules.
-// Any element with [data-readme] opens it (the desktop "readme" icon and the taskbar "readme" button).
+// Fit Game — howto.txt window with the game rules (the "howto" desktop icon and taskbar button).
+// Any element with [data-readme] opens it (the desktop "howto" icon and the taskbar "howto" button).
 // Closes with ×, OK, Escape, or a click outside the window.
 (function () {
   var RULES = [
@@ -45,7 +45,7 @@
     overlay.hidden = true;
     overlay.innerHTML =
       '<div class="px-window readme-window" role="dialog" aria-modal="true" aria-labelledby="readme-title">' +
-        '<div class="px-titlebar"><span id="readme-title">readme.txt - Notepad</span>' +
+        '<div class="px-titlebar"><span id="readme-title">howto.txt - Notepad</span>' +
           '<span class="px-titlebar__controls"><button type="button" aria-label="Minimize" disabled>_</button>' +
           '<button type="button" aria-label="Maximize" disabled>□</button>' +
           '<button type="button" aria-label="Close" data-close>×</button></span></div>' +
