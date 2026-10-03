@@ -87,8 +87,8 @@ new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
   - Timer: 60s countdown to a fixed end time (`.px-progress` + status bar `1:00`), red in the last 10s. At 0:00 the outfit auto-saves and everyone moves to the runway. If every player locks in early, everyone moves to the runway right away.
   - Top: `.px-progress` timer.
   - Status bar shows the time left and your coin count.
-- **Fashion show / voting:** `Runway.exe` well, one player at a time (back sprite, then a stepped swap to front). Below: five star buttons in a `.px-btn-row`, selected ones navy. Status bar: `Now walking: arissa · 2 / 5`.
-- **Podium:** `Results.exe` window with 1st/2nd/3rd on stepped silver blocks (`--bevel-raised`) inside a well. A `.px-bubble` announces coins won.
+- **Runway / voting (`runway.html`):** `Runway.exe · THEME: …` window. Players walk out one at a time (stepped walk-in plus a quick turn) on a black stage well with `Look 2 / 3`, a name tag, and the outfit caption. A 10-second `.px-progress` timer (red in the last 3s) and a row of five `★` buttons (selected = navy) let everyone except the player on stage vote 1–5. Status bar: message · `1 / 2 voted` · `0:07`. Each player gets the full 10 seconds. In a solo round you rate your own look. A pressed star fills that many stars in navy, and the note confirms `Vote saved ✓`.
+- **Podium:** `Results.exe` window: silver (left), gold (center, tallest), bronze (right) blocks with bevels in gold `#e8c547`, silver `#d6d9e0`, bronze `#d28c4a`, each with the avatar in its outfit, name tag, and `★ 12 stars`. Ties share a place and medal. Full ranking list below, then `Back to lobby`.
 - **Mascot / host bubble:** place `.px-bubble` inside the stage `.px-well` (absolute, bottom-right) so it never floats over window chrome.
 - **Marketplace:** `Marketplace.exe` with `.px-slot` items, prices in the status bar, and a `Preview` well that shows your avatar trying on the selected item.
 

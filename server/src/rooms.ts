@@ -10,12 +10,19 @@
 //     { type: 'start', seconds? }                        host only, everyone must be ready
 //     { type: 'outfit', outfit }                         builder: lock in / time's up
 //     { type: 'getOutfits' }                             runway
+//     { type: 'vote', modelId, stars }                   runway: 1-5 stars for the player on the runway
 //   server -> client
 //     { type: 'welcome', id, room }
 //     { type: 'room', players: [{ id, name, look, ready, isHost, connected }], phase }
 //     { type: 'start', round: { theme, category, endsAt, seconds } }
 //     { type: 'outfits', round, outfits: [{ id, name, look, outfit }] }
-//     { type: 'runway' }                                 everyone locked in: go to the runway now
+//     { type: 'runway' }                                 building is over: go to the runway page
+//     { type: 'intro', startsAt, total, theme }           runway about to begin
+//     { type: 'show', index, total, model, endsAt, votes, eligible, myVote, theme }   one player on the runway
+//     { type: 'votes', modelId, votes, eligible }         vote progress for the current model
+//     { type: 'voted', modelId, stars }                   your vote was saved
+//     { type: 'podium', theme, results: [{ id, name, look, outfit, stars, votes, place }] }
+//   Every timed message carries serverNow so browsers can correct for clock differences.
 //     { type: 'error', message }
 
 import { randomBytes } from 'node:crypto'
@@ -28,6 +35,8 @@ import { config } from './config.ts'
 const MAX_PLAYERS = 8
 const DISCONNECT_GRACE_MS = 20000 // keep a player while their browser moves between pages
 const ROOM_IDLE_MS = 30 * 60 * 1000
+const RUNWAY_INTRO_MS = 3000 // time for everyone's browser to load the runway
+const VOTE_MS = 10000 // voting time per player on the runway (always the full 10 seconds)
 
 // themes.js is plain browser JS (attaches globalThis.FIP) — reuse it as-is rather
 // than duplicating the theme list server-side.
@@ -64,17 +73,44 @@ interface Round {
   category: string
   seconds: number
   endsAt: number
-  endedEarly?: boolean
+}
+
+interface RunwayState {
+  order: string[]
+  index: number
+  startsAt: number
+  endsAt: number
+  votes: Map<string, Map<string, number>>
+  timer: ReturnType<typeof setTimeout> | null
+}
+
+interface PodiumResult {
+  id: string
+  name: string
+  look: Look
+  outfit: Partial<Outfit>
+  stars: number
+  votes: number
+  place: number
+}
+
+interface PodiumMsg {
+  type: 'podium'
+  theme: string
+  results: PodiumResult[]
 }
 
 interface Room {
   id: string
-  phase: 'lobby' | 'building'
+  phase: 'lobby' | 'building' | 'runway' | 'podium'
   players: Map<string, Player>
   round: Round | null
   outfits: Map<string, { name: string; look: Look; outfit: Outfit }>
   recentThemes: string[]
   touched: number
+  roundTimer?: ReturnType<typeof setTimeout>
+  runway: RunwayState | null
+  results: PodiumMsg | null
 }
 
 const rooms = new Map<string, Room>()
@@ -82,7 +118,10 @@ const rooms = new Map<string, Room>()
 function getRoom(id: string): Room {
   let room = rooms.get(id)
   if (!room) {
-    room = { id, phase: 'lobby', players: new Map(), round: null, outfits: new Map(), recentThemes: [], touched: Date.now() }
+    room = {
+      id, phase: 'lobby', players: new Map(), round: null, outfits: new Map(), recentThemes: [], touched: Date.now(),
+      runway: null, results: null,
+    }
     rooms.set(id, room)
   }
   room.touched = Date.now()
@@ -94,6 +133,9 @@ function ordered(room: Room): Player[] {
 }
 function hostOf(room: Room): Player | undefined {
   return ordered(room).find((p) => p.connected) || ordered(room)[0]
+}
+function connectedPlayers(room: Room): Player[] {
+  return [...room.players.values()].filter((p) => p.connected)
 }
 
 function send(socket: WebSocket | null | undefined, msg: unknown) {
@@ -131,20 +173,98 @@ function pickTheme(room: Room) {
   return pick
 }
 
-// Once every connected player has locked in, end the round early and send everyone to the runway.
+// ---------- round flow: building -> runway -> podium -> lobby ----------
+
+// Once every connected player has locked in, end building early.
 function checkAllLockedIn(room: Room) {
-  if (room.phase !== 'building' || !room.round || room.round.endedEarly) return
-  const connected = [...room.players.values()].filter((p) => p.connected)
-  if (connected.length === 0 || !connected.every((p) => room.outfits.has(p.id))) return
-  room.round.endedEarly = true
-  room.round.endsAt = Math.min(room.round.endsAt, Date.now())
-  broadcast(room, { type: 'runway' })
+  if (room.phase !== 'building') return
+  const connected = connectedPlayers(room)
+  if (connected.length && connected.every((p) => room.outfits.has(p.id))) endBuilding(room)
 }
 
-// Back to the lobby once the round is over and someone returns to the lobby page.
+function endBuilding(room: Room) {
+  if (room.phase !== 'building' || !room.round) return
+  clearTimeout(room.roundTimer)
+  room.round.endsAt = Math.min(room.round.endsAt, Date.now())
+  const order = [...room.outfits.keys()]
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[order[i], order[j]] = [order[j], order[i]]
+  }
+  room.phase = 'runway'
+  room.runway = { order, index: -1, startsAt: Date.now() + RUNWAY_INTRO_MS, endsAt: 0, votes: new Map(), timer: null }
+  broadcast(room, { type: 'runway' })
+  broadcast(room, introMsg(room))
+  room.runway.timer = setTimeout(() => nextModel(room), RUNWAY_INTRO_MS)
+  broadcastRoom(room)
+}
+
+function introMsg(room: Room) {
+  const rw = room.runway!
+  return { type: 'intro', startsAt: rw.startsAt, total: rw.order.length, theme: room.round!.theme, serverNow: Date.now() }
+}
+
+function modelInfo(room: Room, id: string) {
+  const o = room.outfits.get(id)
+  const p = room.players.get(id)
+  return { id, name: p?.name || o?.name || 'Player', look: p?.look || o?.look || {}, outfit: o?.outfit || {} }
+}
+// Everyone except the player on the runway votes. In a solo round, you rate your own look.
+function eligibleVoters(room: Room, modelId: string): Player[] {
+  const connected = connectedPlayers(room)
+  const others = connected.filter((p) => p.id !== modelId)
+  return others.length ? others : connected
+}
+
+function showMsg(room: Room, forId: string) {
+  const rw = room.runway!
+  const modelId = rw.order[rw.index]
+  const votes = rw.votes.get(modelId) || new Map()
+  return {
+    type: 'show', index: rw.index, total: rw.order.length, model: modelInfo(room, modelId), theme: room.round!.theme,
+    endsAt: rw.endsAt, votes: votes.size, eligible: eligibleVoters(room, modelId).length,
+    canVote: eligibleVoters(room, modelId).some((p) => p.id === forId),
+    myVote: votes.get(forId) || 0, serverNow: Date.now(),
+  }
+}
+function broadcastShow(room: Room) {
+  for (const p of room.players.values()) send(p.socket, showMsg(room, p.id))
+}
+
+function nextModel(room: Room) {
+  if (room.phase !== 'runway' || !room.runway) return
+  const rw = room.runway
+  clearTimeout(rw.timer ?? undefined)
+  rw.index += 1
+  if (rw.index >= rw.order.length) { finishRunway(room); return }
+  const modelId = rw.order[rw.index]
+  rw.votes.set(modelId, new Map())
+  rw.endsAt = Date.now() + VOTE_MS
+  rw.timer = setTimeout(() => nextModel(room), rw.endsAt - Date.now())
+  broadcastShow(room)
+}
+
+function finishRunway(room: Room) {
+  const rw = room.runway!
+  const results: PodiumResult[] = rw.order.map((id) => {
+    const votes = rw.votes.get(id) || new Map()
+    let stars = 0
+    for (const v of votes.values()) stars += v
+    return { ...modelInfo(room, id), stars, votes: votes.size, place: 0 }
+  })
+  results.sort((a, b) => b.stars - a.stars || b.votes - a.votes)
+  results.forEach((r, i) => { r.place = i > 0 && r.stars === results[i - 1].stars ? results[i - 1].place : i + 1 })
+  room.phase = 'podium'
+  room.results = { type: 'podium', theme: room.round!.theme, results }
+  broadcast(room, room.results)
+  broadcastRoom(room)
+}
+
+// Back to the lobby once the podium has been shown and someone returns to the lobby page.
 function resetIfRoundOver(room: Room) {
-  if (room.phase === 'building' && room.round && (room.round.endedEarly || Date.now() > room.round.endsAt + 3000)) {
+  if (room.phase === 'podium') {
     room.phase = 'lobby'
+    room.runway = null
     for (const p of room.players.values()) p.ready = false
   }
 }
@@ -210,9 +330,12 @@ export function attachRooms(httpServer: Server) {
 
       if (msg.type === 'hello') {
         if (!attach(msg.room as string, msg.id as string)) return
-        if (room!.phase === 'building' && room!.round) send(socket, { type: 'start', round: room!.round })
-        if (room!.round?.endedEarly) send(socket, { type: 'runway' })
-        broadcastRoom(room!)
+        const r = room!
+        if (r.phase === 'building' && r.round) send(socket, { type: 'start', round: r.round, serverNow: Date.now() })
+        if (r.phase === 'runway' || r.phase === 'podium') send(socket, { type: 'runway' })
+        if (r.phase === 'runway' && r.runway) send(socket, r.runway.index < 0 ? introMsg(r) : showMsg(r, player!.id))
+        if (r.phase === 'podium' && r.results) send(socket, r.results)
+        broadcastRoom(r)
         return
       }
 
@@ -229,7 +352,7 @@ export function attachRooms(httpServer: Server) {
       if (msg.type === 'start') {
         resetIfRoundOver(room)
         const host = hostOf(room)
-        const connected = [...room.players.values()].filter((p) => p.connected)
+        const connected = connectedPlayers(room)
         if (room.phase !== 'lobby') { send(socket, { type: 'error', message: 'The round already started.' }); return }
         if (!host || host.id !== player.id) { send(socket, { type: 'error', message: 'Only the host can start the game.' }); return }
         if (!connected.every((p) => p.ready)) { send(socket, { type: 'error', message: 'Everyone needs to press Ready first.' }); return }
@@ -238,11 +361,15 @@ export function attachRooms(httpServer: Server) {
         room.round = { theme: t.theme, category: t.category, seconds, endsAt: Date.now() + seconds * 1000 + 1500 }
         room.phase = 'building'
         room.outfits = new Map()
-        broadcast(room, { type: 'start', round: room.round })
+        clearTimeout(room.roundTimer)
+        // Time's up: browsers auto-submit at 0:00, so allow a moment for late outfits to arrive.
+        room.roundTimer = setTimeout(() => endBuilding(room!), room.round.endsAt - Date.now() + 2500)
+        broadcast(room, { type: 'start', round: room.round, serverNow: Date.now() })
         broadcastRoom(room)
       }
 
       if (msg.type === 'outfit') {
+        if (room.phase !== 'building') return
         const o = (msg.outfit as Partial<Outfit>) || {}
         room.outfits.set(player.id, {
           name: player.name,
@@ -259,6 +386,18 @@ export function attachRooms(httpServer: Server) {
       }
 
       if (msg.type === 'getOutfits') send(socket, outfitsMsg(room))
+
+      if (msg.type === 'vote') {
+        const rw = room.runway
+        if (room.phase !== 'runway' || !rw || rw.index < 0) return
+        const modelId = rw.order[rw.index]
+        const stars = Math.round(Number(msg.stars))
+        if (msg.modelId !== modelId || Date.now() > rw.endsAt || !(stars >= 1 && stars <= 5)) return
+        if (!eligibleVoters(room, modelId).some((p) => p.id === player!.id)) return
+        rw.votes.get(modelId)!.set(player.id, stars)
+        broadcast(room, { type: 'votes', modelId, votes: rw.votes.get(modelId)!.size, eligible: eligibleVoters(room, modelId).length })
+        send(socket, { type: 'voted', modelId, stars })
+      }
     })
 
     socket.on('close', () => {
@@ -267,6 +406,7 @@ export function attachRooms(httpServer: Server) {
       player.socket = null
       const r = room
       const p = player
+      checkAllLockedIn(r)
       p.dropTimer = setTimeout(() => {
         r.players.delete(p.id)
         if (r.players.size === 0) rooms.delete(r.id)
