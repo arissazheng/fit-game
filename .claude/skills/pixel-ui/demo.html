@@ -9,6 +9,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="pixel-ui.css">
 <script src="pixel-ui.js" defer></script>
+<script>
+  // The game always starts in the lobby. This page only opens through the lobby's Start button;
+  // opening or refreshing it directly sends you back to the lobby.
+  (function () {
+    var started = null;
+    try { started = sessionStorage.getItem('fip.roundStarted'); sessionStorage.removeItem('fip.roundStarted'); } catch (e) {}
+    if (!started) location.replace('index.html' + location.search);
+  })();
+</script>
 <script src="themes.js"></script>
 <script src="avatar.js"></script>
 <script src="game.js"></script>

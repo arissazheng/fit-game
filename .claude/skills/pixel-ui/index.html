@@ -194,7 +194,8 @@
       return;
     }
     FIP.store.setAvatar(look);
-    location.href = 'demo.html';
+    try { sessionStorage.setItem('fip.roundStarted', String(Date.now())); } catch (e) { /* storage blocked */ }
+    location.href = 'demo.html' + location.search;   // keeps test params like ?seconds=10
   });
 
   sync();
