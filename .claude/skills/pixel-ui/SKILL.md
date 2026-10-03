@@ -6,7 +6,7 @@ description: Retro pixel-art UI style for Fashion in Pixels (fit-game). Use when
 # Pixel UI
 
 Every screen should look like a cute, cozy, retro handheld/PC game menu: chunky
-pixel borders, bitmap fonts, flat colors, hard edges, stepped motion. If a
+pixel borders, pixel fonts, flat colors, hard edges, stepped motion. If a
 component could appear in a modern SaaS dashboard, it is wrong.
 
 Design tokens and ready-made component classes live in
@@ -25,11 +25,12 @@ variables and classes instead of inventing new values.
    - No blur: no `filter: blur`, no blurred `box-shadow`, no `backdrop-filter`, no smooth gradients (hard-stop gradients for patterns and segmented bars are fine). Shadows are hard offsets (`4px 4px 0 var(--px-ink)`).
    - Every `<img>`, `<canvas>`, and sprite gets `image-rendering: pixelated` (`.px-img`).
 2. **Integer pixel grid.** Spacing, borders, and sizes are multiples of `--px` (4px). Scale sprites by whole numbers only (2×, 3×, 4×), never by 1.5×, so pixels stay square.
-3. **Bitmap fonts.**
-   - Display/headings: `Press Start 2P`. Use it big and sparingly, because it is wide.
-   - Body/UI text: `DotGothic16`, which also covers Japanese.
-   - Numbers (timer, coins, stars): `VT323` or Press Start 2P.
-   - Disable font smoothing on pixel text (`-webkit-font-smoothing: none`). Use sizes that are multiples of 8 for Press Start 2P (8/16/24/32px).
+3. **Fonts: Pixelify Sans + Google Sans.** Both load from one Google Fonts link (see top of `pixel-ui.css`).
+   - **Pixelify Sans** (`--px-font-pixel`) is the game's voice and the default: titles, headings, buttons, tabs, banners, timer, coins, scores, player names, short labels. Weights 400–700. Use 700 for headings, 500–600 for UI.
+   - **Google Sans** (`--px-font-text`) is only for text that needs to be read comfortably: paragraphs, instructions, fine print, form inputs, error messages, and anything under ~14px. It is applied automatically to `p`, `small`, `.px-text`, and `.px-input`. Use `.px-text--pixel` to force pixel text instead.
+   - Never introduce other fonts.
+   - Keep Pixelify Sans at 16px or larger, and give it room: headings 24/32/48px, UI 16–18px.
+   - Pixel text keeps `-webkit-font-smoothing: none`. Google Sans text uses antialiasing.
 4. **Flat, limited color.** Pick from the tokens only. One accent color per screen region. Outlines are always `--px-ink`, never pure black or gray.
 5. **Stepped motion.** Animate with `steps(n)` timing, not ease curves. Keep durations short (100–300ms) for UI and frame-by-frame for sprites. Respect `prefers-reduced-motion`.
 6. **Buttons physically press.** Hover lifts or brightens. Active shifts the element down/right by the shadow size and removes the shadow (`.px-btn`).
@@ -53,7 +54,7 @@ variables and classes instead of inventing new values.
 
 ## Screen guidance
 
-- **Login:** centered `.px-window` on a `.px-bg-checker` background. Big Press Start 2P title, `.px-input` for email, one `.px-btn--primary`.
+- **Login:** centered `.px-window` on a `.px-bg-checker` background. Big Pixelify Sans title (48px, 700), `.px-input` for email, one `.px-btn--primary`.
 - **Lobby:** the runway stage fills the background. Players stand on the stage as scaled sprites with name `.px-chip`s above them. Marketplace is a side `.px-btn`. The Start button is the only primary button.
 - **Dressing:** avatar on the left (large integer scale), `.px-window` with `.px-tabs` + `.px-slot` grid on the right, `.px-banner` theme on top, `.px-bar` 60s timer that changes to `--px-danger` in the last 10s.
 - **Runway / voting:** one player at a time with a stepped back-to-front flip (swap the sprite frame, don't use a 3D rotate). `.px-stars` below.
@@ -62,7 +63,7 @@ variables and classes instead of inventing new values.
 ## Do / Don't
 
 - Do: chunky 4px outlines, generous padding, playful copy in caps for headings, tiny sparkle/heart pixel icons.
-- Don't: rounded corners, soft shadows, smooth gradients, thin 1px hairlines, system fonts, SVG icon sets like Heroicons/Lucide. Draw icons as small pixel grids (PNG or CSS box-shadow art).
+- Don't: rounded corners, soft shadows, smooth gradients, thin 1px hairlines, any font other than Pixelify Sans / Google Sans, SVG icon sets like Heroicons/Lucide. Draw icons as small pixel grids (PNG or CSS box-shadow art).
 - Don't copy the source site's anime illustrations or characters. Only the UI chrome is the reference.
 
 ## Checklist before finishing a UI change
