@@ -28,6 +28,10 @@
   .styles .px-btn { min-width: 0; padding-left: 4px; padding-right: 4px; }
   .name-row { display: flex; gap: 6px; }
   .name-row .px-input { flex: 1; min-width: 0; }
+  .name-error { color: #c00000; font-size: 15px; }
+  .px-input.is-invalid { outline: 2px solid #c00000; outline-offset: 1px; }
+  .shake { animation: shake 300ms steps(6); }
+  @keyframes shake { 25% { transform: translateX(-4px); } 50% { transform: translateX(4px); } 75% { transform: translateX(-2px); } }
 
   /* upload */
   .upload-drop { height: 96px; }
@@ -58,7 +62,6 @@
   <div class="px-desktop__icons">
     <button class="px-icon"><span style="font-size:36px">📄</span><span>readme</span></button>
     <button class="px-icon" aria-selected="true"><span style="font-size:36px">🏠</span><span>Lobby</span></button>
-    <button class="px-icon"><span style="font-size:36px">🛍️</span><span>Market</span></button>
   </div>
 
   <div class="px-window px-window--main">
@@ -78,6 +81,7 @@
               <input class="px-input" id="avatar-name" maxlength="16" placeholder="Your name" autocomplete="nickname">
               <button class="px-btn" id="shuffle-btn" type="button" title="Random look">Shuffle</button>
             </div>
+            <span class="name-error" id="name-error" role="alert" hidden>Type a name first, then press Ready</span>
             <span class="px-label">Skin</span>
             <div class="swatches" id="skin-swatches" role="group" aria-label="Skin tone"></div>
             <span class="px-label">Hair color</span>
@@ -259,7 +263,11 @@
     btn.className = 'px-btn'; btn.textContent = item.name;
   });
 
-  nameInput.addEventListener('input', function () { look.name = nameInput.value; changed(); });
+  nameInput.addEventListener('input', function () {
+    look.name = nameInput.value;
+    if (look.name.trim()) { document.getElementById('name-error').hidden = true; nameInput.classList.remove('is-invalid'); }
+    changed();
+  });
   document.getElementById('shuffle-btn').addEventListener('click', function () {
     var pick = function (list) { return list[Math.floor(Math.random() * list.length)]; };
     look.skin = pick(A.SKIN_TONES).hex; look.hair = pick(A.HAIR_COLORS).hex; look.style = pick(A.HAIRSTYLES).id;
@@ -270,7 +278,11 @@
   // Ready locks your avatar and shows a check next to your name. Press again to keep customizing.
   readyBtn.addEventListener('click', function () {
     if (!ready && !look.name.trim()) {
-      statusMsg.textContent = 'Enter a name before pressing Ready';
+      // Make the missing name obvious: red outline, message under the field, and a little shake.
+      document.getElementById('name-error').hidden = false;
+      nameInput.classList.add('is-invalid');
+      nameInput.classList.remove('shake'); void nameInput.offsetWidth; nameInput.classList.add('shake');
+      statusMsg.textContent = 'Type a name first, then press Ready';
       nameInput.focus();
       return;
     }
