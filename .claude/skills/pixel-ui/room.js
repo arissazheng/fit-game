@@ -177,6 +177,7 @@
         if (m.type === 'intro' && handlers.onIntro) handlers.onIntro(m);
         if (m.type === 'show' && handlers.onShow) handlers.onShow(m);
         if (m.type === 'votes' && handlers.onVotes) handlers.onVotes(m);
+        if (m.type === 'voted' && handlers.onVoted) handlers.onVoted(m);
         if (m.type === 'podium' && handlers.onPodium) handlers.onPodium(m);
         if (m.type === 'room' && handlers.onRoom) handlers.onRoom(m);
       },

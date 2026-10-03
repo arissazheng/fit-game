@@ -27,6 +27,7 @@
 //     { type: 'intro', startsAt, total, theme }          runway about to begin
 //     { type: 'show', index, total, model, endsAt, votes, eligible, myVote, theme }   one player on the runway
 //     { type: 'votes', modelId, votes, eligible }        vote progress for the current model
+//     { type: 'voted', modelId, stars }                  your vote was saved
 //     { type: 'podium', theme, results: [{ id, name, look, outfit, stars, votes, place }] }
 //   Every timed message carries serverNow so browsers can correct for clock differences.
 //     { type: 'error', message }
@@ -43,9 +44,7 @@ const MAX_PLAYERS = 8;
 const DISCONNECT_GRACE_MS = 20000;   // keep a player while their browser moves between pages
 const ROOM_IDLE_MS = 30 * 60 * 1000;
 const RUNWAY_INTRO_MS = 3000;        // time for everyone's browser to load the runway
-const VOTE_MS = 10000;               // voting time per player on the runway
-const ALL_VOTED_PAUSE_MS = 1500;     // when everyone has voted, move on after this pause
-const SOLO_SHOW_MS = 4000;           // nobody else can vote (1 player): show the look this long
+const VOTE_MS = 10000;               // voting time per player on the runway (always the full 10 seconds)
 
 // Themes are shared with the browser (themes.js defines globalThis.FIP).
 require(path.join(STATIC_DIR, 'themes.js'));
@@ -162,13 +161,18 @@ function modelInfo(room, id) {
   const o = room.outfits.get(id) || {}, p = room.players.get(id);
   return { id, name: (p && p.name) || o.name || 'Player', look: (p && p.look) || o.look || {}, outfit: o.outfit || {} };
 }
-const eligibleVoters = (room, modelId) => connectedPlayers(room).filter((p) => p.id !== modelId);
+// Everyone except the player on the runway votes. In a solo round, you rate your own look.
+function eligibleVoters(room, modelId) {
+  const connected = connectedPlayers(room), others = connected.filter((p) => p.id !== modelId);
+  return others.length ? others : connected;
+}
 
 function showMsg(room, forId) {
   const rw = room.runway, modelId = rw.order[rw.index], votes = rw.votes.get(modelId) || new Map();
   return {
     type: 'show', index: rw.index, total: rw.order.length, model: modelInfo(room, modelId), theme: room.round.theme,
     endsAt: rw.endsAt, votes: votes.size, eligible: eligibleVoters(room, modelId).length,
+    canVote: eligibleVoters(room, modelId).some((p) => p.id === forId),
     myVote: votes.get(forId) || 0, serverNow: Date.now()
   };
 }
@@ -185,22 +189,9 @@ function nextModel(room) {
   if (rw.index >= rw.order.length) return finishRunway(room);
   const modelId = rw.order[rw.index];
   rw.votes.set(modelId, new Map());
-  const solo = eligibleVoters(room, modelId).length === 0;
-  rw.endsAt = Date.now() + (solo ? SOLO_SHOW_MS : VOTE_MS);
+  rw.endsAt = Date.now() + VOTE_MS;
   rw.timer = setTimeout(() => nextModel(room), rw.endsAt - Date.now());
   broadcastShow(room);
-}
-
-// Everyone who can vote has voted: move on after a short pause.
-function checkVotesDone(room) {
-  if (room.phase !== 'runway' || room.runway.index < 0 || room.runway.advancing) return;
-  const rw = room.runway, modelId = rw.order[rw.index];
-  const eligible = eligibleVoters(room, modelId), votes = rw.votes.get(modelId) || new Map();
-  if (eligible.length && eligible.every((p) => votes.has(p.id))) {
-    rw.advancing = true;
-    clearTimeout(rw.timer);
-    rw.timer = setTimeout(() => nextModel(room), ALL_VOTED_PAUSE_MS);
-  }
 }
 
 function finishRunway(room) {
@@ -336,10 +327,11 @@ wss.on('connection', (socket) => {
       const rw = room.runway;
       if (room.phase !== 'runway' || !rw || rw.index < 0) return;
       const modelId = rw.order[rw.index], stars = Math.round(Number(msg.stars));
-      if (msg.modelId !== modelId || player.id === modelId || !(stars >= 1 && stars <= 5)) return;
+      if (msg.modelId !== modelId || Date.now() > rw.endsAt || !(stars >= 1 && stars <= 5)) return;
+      if (!eligibleVoters(room, modelId).some((p) => p.id === player.id)) return;
       rw.votes.get(modelId).set(player.id, stars);
       broadcast(room, { type: 'votes', modelId, votes: rw.votes.get(modelId).size, eligible: eligibleVoters(room, modelId).length });
-      checkVotesDone(room);
+      send(socket, { type: 'voted', modelId, stars });
     }
   });
 
@@ -349,7 +341,6 @@ wss.on('connection', (socket) => {
     player.socket = null;
     const r = room, p = player;
     checkAllLockedIn(r);
-    checkVotesDone(r);
     p.dropTimer = setTimeout(() => {
       r.players.delete(p.id);
       if (r.players.size === 0) rooms.delete(r.id); else { broadcastRoom(r); checkAllLockedIn(r); }

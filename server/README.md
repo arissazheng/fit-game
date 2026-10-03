@@ -35,7 +35,7 @@ Use a different port with `PORT=8080 npm start`.
   and the timer's end time and sends the same round to everyone.
 - Collects each player's outfit (on Lock in or at 0:00). When everyone has locked in, the round ends early.
 - Runs the runway: players walk out one at a time in random order, and everyone else has 10 seconds
-  to vote 1-5 stars (it moves on early once everyone has voted). Then it ranks players by total stars
+  to vote 1-5 stars (always the full 10 seconds; in a solo round you rate your own look). Then it ranks players by total stars
   and sends the podium (gold, silver, bronze) to everyone.
 - Timed messages include the server's clock, so timers line up even when computers' clocks differ.
 - A player who reloads or moves between pages keeps their spot for 20 seconds.

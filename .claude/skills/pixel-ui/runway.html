@@ -153,10 +153,18 @@
   function setStarsEnabled(on) { starBtns.forEach(function (b) { b.disabled = !on; }); }
 
   function vote(n) {
-    if (!current || current.model.id === myId || Date.now() > deadline) return;
-    myVote = n; paintStars();
-    game.send({ type: 'vote', modelId: current.model.id, stars: n });
-    $('vote-note').textContent = 'You gave ' + current.model.name + ' ' + n + '★ · you can change it until time runs out';
+    if (!current || !current.canVote || Date.now() > deadline) return;
+    myVote = n; paintStars();                       // first n stars turn blue right away
+    $('vote-note').textContent = 'Saving your ' + n + '★ vote...';
+    if (game.online) game.send({ type: 'vote', modelId: current.model.id, stars: n });
+    else onVoted({ modelId: current.model.id, stars: n });
+  }
+  function onVoted(m) {
+    if (!current || m.modelId !== current.model.id) return;
+    myVote = m.stars; paintStars();
+    var whose = current.model.id === myId ? 'your own look' : current.model.name;
+    $('vote-note').textContent = 'Vote saved ✓ You gave ' + whose + ' ' + m.stars + '★ · you can change it until time runs out';
+    if (!game.online) soloStars = m.stars;
   }
 
   // ---------- runway ----------
@@ -183,10 +191,12 @@
     if (isNew) { w.classList.remove('is-walking'); void w.offsetWidth; w.classList.add('is-walking'); }
     fitModel();
     var mine = m.model.id === myId;
-    setStarsEnabled(!mine && m.eligible > 0);
+    setStarsEnabled(!!m.canVote);
     paintStars();
-    $('vote-note').textContent = mine ? 'This is your look! Everyone else is voting.' :
-      myVote ? 'You gave ' + m.model.name + ' ' + myVote + '★' : 'Tap the stars to vote';
+    if (myVote) $('vote-note').textContent = 'Vote saved ✓ You gave ' + (mine ? 'your own look' : m.model.name) + ' ' + myVote + '★';
+    else if (mine && m.canVote) $('vote-note').textContent = "Solo round: rate your own look";
+    else if (mine) $('vote-note').textContent = 'This is your look! Everyone else is voting.';
+    else $('vote-note').textContent = 'Tap the stars to vote';
     $('status-msg').textContent = mine ? 'Strike a pose!' : 'Rate ' + m.model.name + "'s look";
     showVotes(m.votes, m.eligible);
   }
@@ -256,11 +266,13 @@
     onIntro: onIntro,
     onShow: onShow,
     onVotes: function (m) { if (current && m.modelId === current.model.id) showVotes(m.votes, m.eligible); },
+    onVoted: onVoted,
     onPodium: onPodium,
     onOffline: playSolo
   });
 
-  // Without a game server you're the only player: show your look, then the podium.
+  // Without a game server you're the only player: rate your own look for 10 seconds, then the podium.
+  var soloStars = 0;
   function playSolo() {
     var outfit = null;
     try { outfit = JSON.parse(localStorage.getItem('fip.outfit')); } catch (e) {}
@@ -269,11 +281,12 @@
     var model = { id: 'me', name: me.name || 'You', look: me, outfit: outfit };
     onIntro({ startsAt: Date.now() + 2000, total: 1, theme: outfit.theme });
     setTimeout(function () {
-      onShow({ index: 0, total: 1, model: model, theme: outfit.theme, endsAt: Date.now() + 4000, votes: 0, eligible: 0, myVote: 0 });
+      onShow({ index: 0, total: 1, model: model, theme: outfit.theme, endsAt: Date.now() + VOTE_SECONDS * 1000,
+               votes: 0, eligible: 1, canVote: true, myVote: 0 });
     }, 2000);
     setTimeout(function () {
-      onPodium({ theme: outfit.theme, results: [Object.assign({ stars: 0, votes: 0, place: 1 }, model)] });
-    }, 6500);
+      onPodium({ theme: outfit.theme, results: [Object.assign({ stars: soloStars, votes: soloStars ? 1 : 0, place: 1 }, model)] });
+    }, 2000 + VOTE_SECONDS * 1000 + 300);
   }
 </script>
 </body>
