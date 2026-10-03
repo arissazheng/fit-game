@@ -1,0 +1,16 @@
+{
+  "name": "fashion-in-pixels-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Game server for Fashion in Pixels: serves the game pages and runs live rooms over WebSockets.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
+  }
+}

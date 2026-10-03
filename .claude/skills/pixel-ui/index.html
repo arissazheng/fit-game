@@ -111,6 +111,7 @@
           <div class="players" aria-label="Players in this room">
             <span class="px-label">Players</span>
             <div class="seats" id="seats"></div>
+            <button class="px-btn" id="invite-btn" type="button" title="Copy a link friends can open to join this room">Copy invite link</button>
           </div>
           <div class="actions">
             <button class="px-btn px-btn--wide" id="ready-btn" aria-pressed="false">Ready</button>
@@ -120,7 +121,7 @@
       </div>
     </div>
 
-    <div class="px-statusbar"><span id="status-msg">Build your avatar and add up to 10 outfit photos, then press Start</span><span id="player-count">1 / 8 players</span></div>
+    <div class="px-statusbar"><span id="status-msg">Build your avatar and add up to 10 outfit photos, then press Start</span><span id="player-count">1 / 8 players</span><span id="room-cell">Room</span></div>
   </div>
 </div>
 
@@ -147,7 +148,17 @@
   var room = FIP.joinRoom({
     me: { name: look.name, look: look, ready: false },
     onChange: renderRoom,
-    onStart: goToBuilder
+    onStart: goToBuilder,
+    onError: function (msg) { statusMsg.textContent = msg; }
+  });
+
+  // Put the room code in the address bar so the URL itself is the invite link.
+  history.replaceState(null, '', FIP.withRoom('index.html'));
+  document.getElementById('invite-btn').addEventListener('click', function () {
+    var link = FIP.inviteLink(), btn = this;
+    var done = function () { btn.textContent = 'Link copied!'; setTimeout(function () { btn.textContent = 'Copy invite link'; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, function () { prompt('Copy this link:', link); });
+    else prompt('Copy this link:', link);
   });
 
   function displayName(p) { return (p.name || '').trim() || 'Player'; }
@@ -170,6 +181,7 @@
       }
       var shown = viewing ? viewing === p.id : p.isMe;
       btn.setAttribute('aria-pressed', shown ? 'true' : 'false');
+      if (p.connected === false) btn.title = displayName(p) + ' is reconnecting';
       if (!p.isMe && !p.ready) {
         btn.classList.add('is-waiting');
         btn.title = displayName(p) + ' is still customizing';
@@ -186,10 +198,12 @@
 
     var readyCount = players.filter(function (p) { return p.ready; }).length;
     var allReady = readyCount === players.length;
-    var meP = players.filter(function (p) { return p.isMe; })[0];
+    var meP = players.filter(function (p) { return p.isMe; })[0] || players[0];
     var host = players[0];
     document.getElementById('player-count').textContent =
       players.length + ' / ' + FIP.MAX_PLAYERS + ' players · ' + readyCount + ' ready';
+    document.getElementById('room-cell').textContent = 'Room ' + room.roomId +
+      (room.mode === 'server' ? ' · online' : room.mode === 'local' ? ' · this browser only' : ' · connecting');
 
     startBtn.disabled = !(meP.isHost && allReady);
     if (!meP.ready) statusMsg.textContent = 'Customize your avatar, then press Ready';
@@ -281,9 +295,7 @@
   // The host starts once everyone is ready. Every player gets the same theme and end time,
   // then moves to the outfit builder together. Test a short round with ?seconds=10.
   startBtn.addEventListener('click', function () {
-    var seconds = Number(new URLSearchParams(location.search).get('seconds')) || 60;
-    var t = FIP.pickTheme();
-    room.start({ theme: t.theme, category: t.category, endsAt: Date.now() + seconds * 1000 + 1000, seconds: seconds });
+    room.start({ seconds: Number(new URLSearchParams(location.search).get('seconds')) || 60 });
   });
 
   function goToBuilder(round) {
@@ -292,7 +304,7 @@
       sessionStorage.setItem('fip.round', JSON.stringify(round));
       sessionStorage.setItem('fip.roundStarted', String(Date.now()));
     } catch (e) { /* storage blocked */ }
-    location.href = 'demo.html' + location.search;
+    location.href = FIP.withRoom('demo.html');
   }
 
   sync();

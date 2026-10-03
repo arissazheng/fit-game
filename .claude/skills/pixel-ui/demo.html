@@ -21,6 +21,7 @@
 <script src="themes.js"></script>
 <script src="avatar.js"></script>
 <script src="game.js"></script>
+<script src="room.js"></script>
 <style>
   .cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(300px, 28%) minmax(0, 1fr); gap: 12px; }
   .left { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: auto; }
@@ -196,6 +197,13 @@
   }
   var round = startRound();
 
+  // Connection to the game server (if this page is served by it). Outfits are sent on lock-in and at 0:00.
+  var game = FIP.connectGame({
+    onStart: function (r) {      // the server's round wins if this page somehow missed it
+      if (!lobbyRound) { lobbyRound = r; round = startRound(); endsAt = r.endsAt; ROUND_SECONDS = r.seconds; }
+    }
+  });
+
   // ---------- Closet: pick items ----------
   // One item per category (Acc allows several). A dress replaces top + bottom, and vice versa.
   var locked = false;
@@ -234,7 +242,7 @@
   function saveOutfit() {
     var outfit = currentOutfit();
     try { localStorage.setItem('fip.outfit', JSON.stringify(outfit)); } catch (err) { /* storage blocked */ }
-    // Real game: send `outfit` to the server here so the runway can show everyone's look.
+    game.send({ type: 'outfit', outfit: outfit });   // the server shares it with everyone for the runway
     return outfit;
   }
 
@@ -272,7 +280,7 @@
   var text = document.getElementById('timer-text');
 
   function tick() {
-    var left = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+    var left = Math.min(ROUND_SECONDS, Math.max(0, Math.ceil((endsAt - Date.now()) / 1000)));
     text.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
     bar.style.setProperty('--value', left / ROUND_SECONDS);
     bar.classList.toggle('is-danger', left <= 10);
@@ -282,7 +290,7 @@
       locked = true;
       document.getElementById('status-msg').textContent = "Time's up! Outfit saved. Heading to the runway...";
       try { sessionStorage.setItem('fip.runwayReady', String(Date.now())); } catch (e) { /* storage blocked */ }
-      setTimeout(function () { location.href = 'runway.html'; }, 1500);
+      setTimeout(function () { location.href = FIP.withRoom('runway.html'); }, 1500);
     }
   }
   var timer = setInterval(tick, 250);
