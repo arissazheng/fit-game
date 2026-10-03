@@ -81,7 +81,8 @@ new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
 - **Outfit builder (60s):** the screen where each player builds their outfit for the round's theme. No star rating, settings, or colorway here; voting happens later in the fashion show.
   - Main window title is the theme, e.g. `THEME: Y2K Pop Star`.
   - Left column: `Closet.exe` window with `.px-tabs` (Tops / Bottoms / Dresses / Acc) and a `.px-slot` grid, then `Upload.exe` (photo dropzone, up to 10 photos) underneath.
-  - Right: the theme window, whose big `.px-well` shows your avatar at integer scale being dressed, plus a `.px-btn--wide` `LOCK IN OUTFIT`.
+  - Right: the theme window, whose big `.px-well` shows your avatar (64×128 canvas, whole-number scale) being dressed live as you click closet items, plus a `.px-btn--wide` `LOCK IN OUTFIT`. This well is not an upload area; uploads only happen in `Upload.exe`.
+  - Timer: 60s countdown to a fixed end time (`.px-progress` + status bar `1:00`), red in the last 10s. At 0:00 the outfit auto-saves and everyone moves to the runway.
   - Top: `.px-progress` timer.
   - Status bar shows the time left and your coin count.
 - **Fashion show / voting:** `Runway.exe` well, one player at a time (back sprite, then a stepped swap to front). Below: five star buttons in a `.px-btn-row`, selected ones navy. Status bar: `Now walking: arissa · 2 / 5`.

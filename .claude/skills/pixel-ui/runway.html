@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Runway · Fashion in Pixels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="pixel-ui.css">
+<style>
+  .stage { flex: 1; min-height: 240px; }
+  .look { text-align: center; color: var(--light); display: flex; flex-direction: column; gap: 8px; font-size: 20px; }
+  .look dt { color: var(--shadow); font-size: 15px; text-transform: uppercase; letter-spacing: 0.1em; }
+  .look dd { margin: 0 0 8px; }
+</style>
+</head>
+<body>
+<!-- Placeholder for stage 3 (runway). Shows the outfit saved when the outfit builder timer hit 0:00. -->
+<div class="px-desktop">
+  <div class="px-desktop__icons"></div>
+
+  <div class="px-window px-window--main">
+    <div class="px-titlebar">
+      <span>FASHION IN PIXELS v1.0</span>
+      <span class="px-titlebar__controls"><button aria-label="Minimize">_</button><button aria-label="Maximize">□</button><button aria-label="Close">×</button></span>
+    </div>
+    <div class="px-window__body">
+      <div class="px-window" style="flex:1; min-height:0">
+        <div class="px-titlebar"><span id="title">Runway.exe</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
+        <div class="px-window__body" style="flex:1; min-height:0">
+          <div class="px-well stage">
+            <dl class="look" id="look"><dt>Runway coming soon</dt></dl>
+          </div>
+          <a class="px-btn px-btn--wide" href="demo.html" style="display:grid;place-items:center;text-decoration:none">Play another round</a>
+        </div>
+      </div>
+    </div>
+    <div class="px-statusbar"><span id="status-msg">Outfit saved</span><span>Runway</span></div>
+  </div>
+</div>
+
+<div class="px-taskbar">
+  <button class="px-btn">▤ Start</button>
+  <button class="px-btn px-taskbar__task" aria-pressed="true">👠 Runway.exe</button>
+  <span class="px-taskbar__tray">🔈 17:14</span>
+</div>
+
+<script>
+  var outfit = null;
+  try { outfit = JSON.parse(localStorage.getItem('fip.outfit')); } catch (err) { /* storage blocked */ }
+  var look = document.getElementById('look');
+  if (outfit) {
+    document.getElementById('title').textContent = 'Runway.exe · THEME: ' + outfit.theme;
+    var rows = [['Top', outfit.top], ['Bottom', outfit.bottom], ['Dress', outfit.dress],
+                ['Accessories', outfit.accessories.join(', ')]];
+    look.innerHTML = '<dt>Your saved look</dt>';
+    rows.forEach(function (r) {
+      if (!r[1]) return;
+      var dt = document.createElement('dt'); dt.textContent = r[0];
+      var dd = document.createElement('dd'); dd.textContent = r[1];
+      look.append(dt, dd);
+    });
+  } else {
+    document.getElementById('status-msg').textContent = 'No saved outfit found';
+  }
+</script>
+</body>
+</html>
