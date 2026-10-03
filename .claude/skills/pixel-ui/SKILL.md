@@ -7,8 +7,9 @@ description: Retro desktop (Windows 95/98-style) pixel UI for Fashion in Pixels 
 
 The whole game looks like an old desktop computer: teal background, silver
 beveled windows with navy-to-blue gradient title bars, chunky 3D buttons, sunken
-black preview areas, a status bar, and a taskbar along the bottom. Every screen is
-a window (or several windows) on that desktop. The pixel-art avatars and clothes
+black preview areas, a status bar, and a taskbar along the bottom. The game plays
+full screen: one big main window, centered on the desktop, fills everything
+above the taskbar, and each screen's panels are child windows inside it. The pixel-art avatars and clothes
 sit inside those windows.
 
 Tokens and ready-made component classes live in [`pixel-ui.css`](./pixel-ui.css).
@@ -19,6 +20,7 @@ new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
 
 | Element | Spec |
 |---|---|
+| Layout | full-screen `.px-desktop` grid: desktop icons in a narrow left column, one centered `.px-window--main` (max 1600px wide, full height above the taskbar), and an empty mirror column on the right so the window sits truly centered. Child windows inside it share the space with grid/flex, and the stage well stretches to fill the rest. |
 | Desktop background | flat teal `#008080` (`--desk`) |
 | Window / button face | silver `#c0c0c0` (`--face`) |
 | Bevels | 2-line inset shadows: white/light on top-left, gray/near-black on bottom-right. Raised for buttons and windows, inverted (sunken) for inputs, wells, slots, and pressed buttons. Use the `--bevel-*` tokens. |
@@ -52,7 +54,7 @@ new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
 
 | Need | Markup / class |
 |---|---|
-| Page background | `.px-desktop` (teal, leaves room for taskbar) |
+| Page / full-screen layout | `.px-desktop` > `.px-desktop__icons` + `.px-window.px-window--main` (+ `.px-taskbar` after it). Stacks to one column under 860px. |
 | Desktop shortcut | `button.px-icon` > `img` + `span` label (white text, black text-shadow) |
 | Window | `.px-window` > `.px-titlebar` (title + `.px-titlebar__controls` with 3 buttons) > optional `.px-menubar` > `.px-window__body` > optional `.px-statusbar` |
 | Inactive window | add `.is-inactive` |
@@ -83,6 +85,7 @@ new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
   - Status bar shows the time left and your coin count.
 - **Fashion show / voting:** `Runway.exe` well, one player at a time (back sprite, then a stepped swap to front). Below: five star buttons in a `.px-btn-row`, selected ones navy. Status bar: `Now walking: arissa · 2 / 5`.
 - **Podium:** `Results.exe` window with 1st/2nd/3rd on stepped silver blocks (`--bevel-raised`) inside a well. A `.px-bubble` announces coins won.
+- **Mascot / host bubble:** place `.px-bubble` inside the stage `.px-well` (absolute, bottom-right) so it never floats over window chrome.
 - **Marketplace:** `Marketplace.exe` with `.px-slot` items, prices in the status bar, and a `Preview` well that shows your avatar trying on the selected item.
 
 ## Do / Don't
@@ -93,7 +96,7 @@ new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
 
 ## Checklist before finishing a UI change
 
-- [ ] Background is teal desktop, and content lives in `.px-window`s.
+- [ ] Screen uses the full-screen layout: one centered `.px-window--main` with child windows inside, and no page scroll on desktop.
 - [ ] Every raised/sunken surface uses a `--bevel-*` token, with no ad-hoc borders.
 - [ ] Selected states are navy fill with white text.
 - [ ] No `border-radius` (except `.px-bubble`), blur, or soft shadows.

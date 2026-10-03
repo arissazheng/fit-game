@@ -9,27 +9,30 @@
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="pixel-ui.css">
 <style>
-  .layout { display: flex; gap: 16px; align-items: flex-start; }
-  .icons { display: flex; flex-direction: column; gap: 12px; }
-  .app { flex: 1; max-width: 960px; }
-  .stars .px-btn { min-width: 48px; font-size: 22px; }
-  .cols { display: grid; grid-template-columns: 320px 1fr; gap: 12px; }
-  .left { display: flex; flex-direction: column; gap: 12px; }
-  .stage { height: 360px; }
+  .cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(300px, 28%) minmax(0, 1fr); gap: 12px; }
+  .left { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: auto; }
+  .stage-win { min-height: 0; }
+  .stage-win > .px-window__body { flex: 1; min-height: 0; }
+  .stage { flex: 1; min-height: 240px; }
   .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-  .mascot { position: fixed; right: 24px; bottom: 60px; }
+  .stars .px-btn { min-width: 48px; font-size: 22px; }
+  .mascot { position: absolute; right: 16px; bottom: 16px; }
+  @media (max-width: 860px) {
+    .cols { grid-template-columns: minmax(0, 1fr); }
+    .mascot { position: static; margin-top: 12px; }
+    .mascot::after { display: none; }
+  }
 </style>
 </head>
 <body>
 <div class="px-desktop">
-  <div class="layout">
-    <div class="icons">
+  <div class="px-desktop__icons">
       <button class="px-icon"><span style="font-size:36px">📄</span><span>readme</span></button>
       <button class="px-icon" aria-selected="true"><span style="font-size:36px">👗</span><span>Closet</span></button>
       <button class="px-icon"><span style="font-size:36px">🛍️</span><span>Market</span></button>
-    </div>
+  </div>
 
-    <div class="px-window app">
+    <div class="px-window px-window--main">
       <div class="px-titlebar">
         <span>FASHION IN PIXELS v1.0</span>
         <span class="px-titlebar__controls"><button aria-label="Minimize">_</button><button aria-label="Maximize">□</button><button aria-label="Close">×</button></span>
@@ -72,12 +75,13 @@
           </div>
         </div>
 
-        <div class="px-window">
+        <div class="px-window stage-win">
           <div class="px-titlebar"><span>THEME: Y2K Pop Star</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
           <div class="px-window__body">
             <div class="px-progress" style="--value:.65"><i></i></div>
             <div class="px-well stage">
               <div class="px-well__empty">🖼<br>Drag &amp; Drop<br>or Click</div>
+              <div class="px-bubble mascot">Want to dress up? I'm great at waiting.</div>
             </div>
             <div class="px-btn-row stars">
               <button class="px-btn" aria-pressed="true">★</button><button class="px-btn" aria-pressed="true">★</button><button class="px-btn" aria-pressed="true">★</button><button class="px-btn">★</button><button class="px-btn">★</button>
@@ -89,9 +93,7 @@
 
       <div class="px-statusbar"><span>Ready</span><span>0:39</span><span>120 coins</span></div>
     </div>
-  </div>
 
-  <div class="px-bubble mascot">Want to dress up? I'm great at waiting.</div>
 </div>
 
 <div class="px-taskbar">

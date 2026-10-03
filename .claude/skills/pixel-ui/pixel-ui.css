@@ -88,11 +88,30 @@ img, canvas, .px-img { image-rendering: pixelated; }
 :focus-visible { outline: 1px dotted var(--text); outline-offset: -5px; }
 
 /* ---------- desktop ---------- */
+/* Full-screen desktop: icon column | centered main window | mirror column.
+   The game runs inside one big .px-window--main that fills the screen above the taskbar. */
 .px-desktop {
-  min-height: 100vh;
+  height: 100vh; height: 100dvh;
   background: var(--desk);
   position: relative;
-  padding: 16px 16px 60px; /* room for taskbar */
+  padding: 16px 16px calc(62px + env(safe-area-inset-bottom, 0px)); /* room for taskbar */
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) 96px;
+  gap: 16px;
+  overflow: hidden;
+}
+.px-desktop__icons { grid-column: 1; display: flex; flex-direction: column; gap: 12px; }
+.px-window--main {
+  grid-column: 2;
+  justify-self: center;
+  width: 100%; max-width: 1600px;
+  height: 100%; min-height: 0;
+}
+.px-window--main > .px-window__body { flex: 1; min-height: 0; }
+@media (max-width: 860px) {
+  .px-desktop { height: auto; min-height: 100vh; grid-template-columns: minmax(0, 1fr); overflow: visible; }
+  .px-desktop__icons { flex-direction: row; }
+  .px-window--main { grid-column: 1; height: auto; }
 }
 .px-icon {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
