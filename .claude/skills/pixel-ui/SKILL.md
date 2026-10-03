@@ -1,76 +1,102 @@
 ---
 name: pixel-ui
-description: Retro pixel-art UI style for Fashion in Pixels (fit-game). Use whenever building or editing any frontend screen, component, or style in this repo — login, lobby, dressing room, runway, voting, podium, marketplace — or when choosing fonts, colors, borders, buttons, backgrounds, or animations. Inspired by the retro pixelated look of pixel-converter.ameniwa.com (UI chrome only, not its anime artwork).
+description: Retro desktop (Windows 95/98-style) pixel UI for Fashion in Pixels (fit-game). Use whenever building or editing any frontend screen, component, or style in this repo — login, lobby, dressing room, runway, voting, podium, marketplace — or when choosing fonts, colors, borders, buttons, backgrounds, layout, or animations. Based on the UI chrome of pixel-converter.ameniwa.com, not its anime artwork.
 ---
 
-# Pixel UI
+# Pixel UI: retro desktop
 
-Every screen should look like a cute, cozy, retro handheld/PC game menu: chunky
-pixel borders, pixel fonts, flat colors, hard edges, stepped motion. If a
-component could appear in a modern SaaS dashboard, it is wrong.
+The whole game looks like an old desktop computer: teal background, silver
+beveled windows with navy-to-blue gradient title bars, chunky 3D buttons, sunken
+black preview areas, a status bar, and a taskbar along the bottom. Every screen is
+a window (or several windows) on that desktop. The pixel-art avatars and clothes
+sit inside those windows.
 
-Design tokens and ready-made component classes live in
-[`pixel-ui.css`](./pixel-ui.css). Import it once globally and build on its
-variables and classes instead of inventing new values.
+Tokens and ready-made component classes live in [`pixel-ui.css`](./pixel-ui.css).
+Import it once globally, then build with its variables and classes. Don't invent
+new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
 
-> **Palette status: provisional.** The source site could not be fetched when this
-> skill was written, so the colors below are a pixel-pastel placeholder. When
-> someone captures the site's real hex values, replace the `:root` tokens in
-> `pixel-ui.css`. Components only reference tokens, so nothing else changes.
+## The look, in one list
+
+| Element | Spec |
+|---|---|
+| Desktop background | flat teal `#008080` (`--desk`) |
+| Window / button face | silver `#c0c0c0` (`--face`) |
+| Bevels | 2-line inset shadows: white/light on top-left, gray/near-black on bottom-right. Raised for buttons and windows, inverted (sunken) for inputs, wells, slots, and pressed buttons. Use the `--bevel-*` tokens. |
+| Title bar | left-to-right gradient navy `#000080` → blue `#1084d0`, white text, `_ □ ×` controls on the right. Inactive windows use a gray gradient. |
+| Selected state | solid navy fill `#000080` with white text (selected size button, palette, inventory slot, menu hover) |
+| Preview / stage | black well (`.px-well`) with a sunken bevel, gray "Drag & Drop" empty-state text |
+| Status bar | row of sunken cells at the bottom of a window: message on the left, small value cells on the right (e.g. `5px` `Sakura`) |
+| Taskbar | silver bar fixed to the bottom: `Start` button, task buttons, clock tray on the right |
+| Speech bubble | pale yellow `#ffffe1`, thin black border, rounded corners. This is the only rounded thing in the UI. |
+| Fonts | Pixelify Sans for all chrome. Google Sans only for long or readable text. See below. |
 
 ## Hard rules
 
-1. **No smoothing, anywhere.**
-   - `border-radius: 0` always. Fake rounded corners with stepped `box-shadow` (see `.px-box`).
-   - No blur: no `filter: blur`, no blurred `box-shadow`, no `backdrop-filter`, no smooth gradients (hard-stop gradients for patterns and segmented bars are fine). Shadows are hard offsets (`4px 4px 0 var(--px-ink)`).
-   - Every `<img>`, `<canvas>`, and sprite gets `image-rendering: pixelated` (`.px-img`).
-2. **Integer pixel grid.** Spacing, borders, and sizes are multiples of `--px` (4px). Scale sprites by whole numbers only (2×, 3×, 4×), never by 1.5×, so pixels stay square.
-3. **Fonts: Pixelify Sans + Google Sans.** Both load from one Google Fonts link (see top of `pixel-ui.css`).
-   - **Pixelify Sans** (`--px-font-pixel`) is the game's voice and the default: titles, headings, buttons, tabs, banners, timer, coins, scores, player names, short labels. Weights 400–700. Use 700 for headings, 500–600 for UI.
-   - **Google Sans** (`--px-font-text`) is only for text that needs to be read comfortably: paragraphs, instructions, fine print, form inputs, error messages, and anything under ~14px. It is applied automatically to `p`, `small`, `.px-text`, and `.px-input`. Use `.px-text--pixel` to force pixel text instead.
-   - Never introduce other fonts.
-   - Keep Pixelify Sans at 16px or larger, and give it room: headings 24/32/48px, UI 16–18px.
-   - Pixel text keeps `-webkit-font-smoothing: none`. Google Sans text uses antialiasing.
-4. **Flat, limited color.** Pick from the tokens only. One accent color per screen region. Outlines are always `--px-ink`, never pure black or gray.
-5. **Stepped motion.** Animate with `steps(n)` timing, not ease curves. Keep durations short (100–300ms) for UI and frame-by-frame for sprites. Respect `prefers-reduced-motion`.
-6. **Buttons physically press.** Hover lifts or brightens. Active shifts the element down/right by the shadow size and removes the shadow (`.px-btn`).
+1. **Beveled, flat, no modern softness.**
+   - No `border-radius` except on `.px-bubble`.
+   - No blur, no drop shadows that fade, no glassmorphism.
+   - The only gradient allowed is the title bar's navy→blue (plus hard-stop patterns such as the progress blocks).
+   - Depth comes only from the bevel tokens.
+2. **Buttons press in.** `:active` swaps `--bevel-raised` for `--bevel-pressed` and nudges the label 1px down-right. Toggle buttons that are "on" (size, palette, category, star rating) get the navy selected style, not a color accent.
+3. **Fonts: Pixelify Sans + Google Sans.** Both come from one Google Fonts link (see top of `pixel-ui.css`).
+   - **Pixelify Sans** (`--font-pixel`) is the default for everything in the chrome: title bars, menus (`File(F) Edit(E) View(V) Help(H)`), buttons, labels like `SIZE` / `FX`, status bar, taskbar, timer, scores, player names.
+   - Uppercase section labels with slight letter-spacing.
+   - Keep sizes at 15–20px for UI and 18px for title bars. Go larger only for big moments (theme reveal, winner).
+   - **Google Sans** (`--font-text`) only for paragraphs, help text, fine print, form inputs, and errors. Applied automatically to `p`, `small`, `.px-text`, and `.px-input`.
+   - No other fonts.
+4. **Pixel art stays pixel art.** All avatars, clothing sprites, and stage art use `image-rendering: pixelated` (`.px-img`) and integer scaling (2×, 3×, 4×).
+5. **Color discipline.** Chrome uses only the silver/navy/teal tokens. Bright color belongs to the pixel art (avatars, clothes, palette swatches), not the UI.
+6. **Motion is choppy and rare.** Use `steps()` timing, short durations, and things like window pop-ins, a blinking caret, or a step-by-step progress fill. Respect `prefers-reduced-motion`.
 
-## Component recipes (all in `pixel-ui.css`)
+## Components (`pixel-ui.css`)
 
-| Need | Class | Notes |
-|---|---|---|
-| Panel / window / card | `.px-box` | 4px ink border with notched corners and a hard drop shadow |
-| Window with title bar | `.px-window` + `.px-window__title` | For marketplace and inventory panels |
-| Button | `.px-btn`, `.px-btn--primary`, `.px-btn--danger` | Press-down on `:active` |
-| Tabs (closet categories) | `.px-tabs` / `.px-tab[aria-selected=true]` | Selected tab merges into the panel below |
-| Text input / email field | `.px-input` | Inset look, blinking block caret optional |
-| Progress / timer bar | `.px-bar` + `--value` | Segmented blocks, not a smooth fill |
-| Star rating | `.px-stars` | 5 pixel stars, keyboard accessible radio group |
-| Speech / theme banner | `.px-banner` | Theme announcement at top of dressing screen |
-| Coin / badge chip | `.px-chip` | Coins, player count, "NEW" |
-| Item slot (inventory grid) | `.px-slot` | Square, selected = accent border + bounce |
-| Background | `.px-bg-checker`, `.px-bg-dots` | Pure-CSS tiled patterns, no image files |
-| Sprite | `.px-img` | Avatars, clothing, stage art |
+| Need | Markup / class |
+|---|---|
+| Page background | `.px-desktop` (teal, leaves room for taskbar) |
+| Desktop shortcut | `button.px-icon` > `img` + `span` label (white text, black text-shadow) |
+| Window | `.px-window` > `.px-titlebar` (title + `.px-titlebar__controls` with 3 buttons) > optional `.px-menubar` > `.px-window__body` > optional `.px-statusbar` |
+| Inactive window | add `.is-inactive` |
+| Section label | `.px-label` (`SIZE`, `FX`, `CLOSET`) |
+| Button | `.px-btn`. Selected: `aria-pressed="true"`. Full-width action: `.px-btn--wide` (like `↓ DOWNLOAD PNG`) |
+| Button rows / 2-col grid | `.px-btn-row`, `.px-btn-grid` |
+| Palette / colorway chip | `.px-btn.px-swatch` > `.px-swatch__colors` (`<i style="background:…">` ×N) + label |
+| Text input | `.px-input` (white, sunken) |
+| Checkbox | `label.px-check` > `input[type=checkbox]` + text (`ON / OFF`) |
+| Preview / stage / avatar viewport | `.px-well` (+ `.px-well__empty` for the empty state) |
+| Inventory grid cell | `.px-slot` (selected: `aria-selected="true"`) |
+| Tabs (closet categories) | `.px-tabs` > `.px-tab[aria-selected]` directly above a `.px-tabpanel` |
+| Timer / progress | `.px-progress` > `i`, set `--value` 0..1. Add `.is-danger` in the last 10s |
+| Status bar | `.px-statusbar` > `span` cells |
+| Taskbar | `.px-taskbar` > `.px-btn` Start, `.px-btn.px-taskbar__task` …, `.px-taskbar__tray` (clock) |
+| Mascot / host speech | `.px-bubble` |
 
-## Screen guidance
+## Mapping game screens to the desktop
 
-- **Login:** centered `.px-window` on a `.px-bg-checker` background. Big Pixelify Sans title (48px, 700), `.px-input` for email, one `.px-btn--primary`.
-- **Lobby:** the runway stage fills the background. Players stand on the stage as scaled sprites with name `.px-chip`s above them. Marketplace is a side `.px-btn`. The Start button is the only primary button.
-- **Dressing:** avatar on the left (large integer scale), `.px-window` with `.px-tabs` + `.px-slot` grid on the right, `.px-banner` theme on top, `.px-bar` 60s timer that changes to `--px-danger` in the last 10s.
-- **Runway / voting:** one player at a time with a stepped back-to-front flip (swap the sprite frame, don't use a 3D rotate). `.px-stars` below.
-- **Podium:** three stepped blocks (1st tallest) drawn with `.px-box`. Coins pop up with `px-pop`, plus a confetti made of square pixels.
+- **Login:** teal desktop with a small centered window `Fashion in Pixels v1.0`. Inside: a `.px-label` EMAIL, a `.px-input`, and an `OK` / `Log in` `.px-btn`. Taskbar shows `Start` + clock.
+- **Lobby:** a big `Runway.exe` window whose body is a `.px-well` showing the pixel stage with players standing on it, each with a name tag. Side window `Players` lists who's in the room. Desktop icons: `Closet`, `Marketplace`, `readme` (how to play). The host gets a `.px-btn--wide` `START SHOW`. When the show starts, the theme appears in a `.px-bubble` from the mascot.
+- **Upload closet:** mirror the reference layout. Left `Upload.exe` window with options, right `Preview` well with "Drag & Drop or Click", `.px-progress` while extracting, status bar `3 / 10 photos · 12 items found`.
+- **Dressing room (60s):**
+  - Main window title is the theme, e.g. `THEME: Y2K Pop Star`.
+  - Left: `.px-well` with your avatar at integer scale.
+  - Right: `Closet` window with `.px-tabs` (Tops / Bottoms / Dresses / Shoes / Accessories) and a `.px-slot` grid.
+  - Top: `.px-progress` timer.
+  - Status bar shows the time left and your coin count.
+- **Fashion show / voting:** `Runway.exe` well, one player at a time (back sprite, then a stepped swap to front). Below: five star buttons in a `.px-btn-row`, selected ones navy. Status bar: `Now walking: arissa · 2 / 5`.
+- **Podium:** `Results.exe` window with 1st/2nd/3rd on stepped silver blocks (`--bevel-raised`) inside a well. A `.px-bubble` announces coins won.
+- **Marketplace:** `Marketplace.exe` with `.px-slot` items, prices in the status bar, and a `Preview` well that shows your avatar trying on the selected item.
 
 ## Do / Don't
 
-- Do: chunky 4px outlines, generous padding, playful copy in caps for headings, tiny sparkle/heart pixel icons.
-- Don't: rounded corners, soft shadows, smooth gradients, thin 1px hairlines, any font other than Pixelify Sans / Google Sans, SVG icon sets like Heroicons/Lucide. Draw icons as small pixel grids (PNG or CSS box-shadow art).
-- Don't copy the source site's anime illustrations or characters. Only the UI chrome is the reference.
+- Do: classic OS jokes in the copy (`Pixel.exe`, `Closet.exe`, `File(F)`, Recycle Bin renamed as a pun), `_ □ ×` controls, status bar messages like `Ready`.
+- Don't: rounded cards, pastel gradients, colored accent buttons, icon fonts (Heroicons/Lucide), 1px modern hairline borders, any font besides Pixelify Sans / Google Sans.
+- Don't copy the reference site's anime character or illustrations. If you want a mascot, design an original pixel one.
 
 ## Checklist before finishing a UI change
 
-- [ ] No `border-radius`, smooth gradients, or blurred shadows were introduced.
-- [ ] All images/canvases render pixelated at integer scales.
-- [ ] Only `--px-*` tokens are used for color and spacing.
-- [ ] Buttons have hover, active (pressed), and `:focus-visible` (dashed ink outline) states.
-- [ ] Animations use `steps()` and are disabled under `prefers-reduced-motion`.
-- [ ] Text contrast is readable (ink on light panels, cream on dark panels).
+- [ ] Background is teal desktop, and content lives in `.px-window`s.
+- [ ] Every raised/sunken surface uses a `--bevel-*` token, with no ad-hoc borders.
+- [ ] Selected states are navy fill with white text.
+- [ ] No `border-radius` (except `.px-bubble`), blur, or soft shadows.
+- [ ] Images/canvases are pixelated at integer scales.
+- [ ] Buttons have `:active` pressed and `:focus-visible` (dotted outline) states.
+- [ ] Animations use `steps()` and turn off under `prefers-reduced-motion`.

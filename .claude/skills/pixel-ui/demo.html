@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixel UI Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="pixel-ui.css">
+<style>
+  .layout { display: flex; gap: 16px; align-items: flex-start; }
+  .icons { display: flex; flex-direction: column; gap: 12px; }
+  .app { flex: 1; max-width: 960px; }
+  .stars .px-btn { min-width: 48px; font-size: 22px; }
+  .cols { display: grid; grid-template-columns: 320px 1fr; gap: 12px; }
+  .left { display: flex; flex-direction: column; gap: 12px; }
+  .stage { height: 360px; }
+  .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .mascot { position: fixed; right: 24px; bottom: 60px; }
+</style>
+</head>
+<body>
+<div class="px-desktop">
+  <div class="layout">
+    <div class="icons">
+      <button class="px-icon"><span style="font-size:36px">📄</span><span>readme</span></button>
+      <button class="px-icon" aria-selected="true"><span style="font-size:36px">👗</span><span>Closet</span></button>
+      <button class="px-icon"><span style="font-size:36px">🛍️</span><span>Market</span></button>
+    </div>
+
+    <div class="px-window app">
+      <div class="px-titlebar">
+        <span>FASHION IN PIXELS v1.0</span>
+        <span class="px-titlebar__controls"><button aria-label="Minimize">_</button><button aria-label="Maximize">□</button><button aria-label="Close">×</button></span>
+      </div>
+      <nav class="px-menubar"><button>File(F)</button><button>Edit(E)</button><button>View(V)</button><button>Help(H)</button></nav>
+
+      <div class="px-window__body cols">
+        <div class="left">
+          <div class="px-window">
+            <div class="px-titlebar"><span>Closet.exe</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
+            <div class="px-window__body">
+              <div>
+                <div class="px-tabs" role="tablist">
+                  <button class="px-tab" aria-selected="true">Tops</button>
+                  <button class="px-tab">Bottoms</button>
+                  <button class="px-tab">Acc</button>
+                </div>
+                <div class="px-tabpanel">
+                  <div class="slots">
+                    <button class="px-slot"></button><button class="px-slot" aria-selected="true"></button>
+                    <button class="px-slot"></button><button class="px-slot"></button>
+                    <button class="px-slot"></button><button class="px-slot"></button>
+                  </div>
+                </div>
+              </div>
+              <span class="px-label">Colorway</span>
+              <div class="px-btn-grid">
+                <button class="px-btn px-swatch" aria-pressed="true"><span class="px-swatch__colors"><i style="background:#f6c1d1"></i><i style="background:#e0708e"></i><i style="background:#b8345b"></i><i style="background:#fff"></i></span>Sakura</button>
+                <button class="px-btn px-swatch"><span class="px-swatch__colors"><i style="background:#0f380f"></i><i style="background:#306230"></i><i style="background:#8bac0f"></i><i style="background:#9bbc0f"></i></span>Game Boy</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="px-window is-inactive">
+            <div class="px-titlebar"><span>Settings</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
+            <div class="px-window__body">
+              <label class="px-check"><input type="checkbox" checked> SOUND ON / OFF</label>
+              <input class="px-input" placeholder="you@email.com">
+            </div>
+          </div>
+        </div>
+
+        <div class="px-window">
+          <div class="px-titlebar"><span>THEME: Y2K Pop Star</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
+          <div class="px-window__body">
+            <div class="px-progress" style="--value:.65"><i></i></div>
+            <div class="px-well stage">
+              <div class="px-well__empty">🖼<br>Drag &amp; Drop<br>or Click</div>
+            </div>
+            <div class="px-btn-row stars">
+              <button class="px-btn" aria-pressed="true">★</button><button class="px-btn" aria-pressed="true">★</button><button class="px-btn" aria-pressed="true">★</button><button class="px-btn">★</button><button class="px-btn">★</button>
+            </div>
+            <button class="px-btn px-btn--wide">↓ Lock in outfit</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-statusbar"><span>Ready</span><span>0:39</span><span>120 coins</span></div>
+    </div>
+  </div>
+
+  <div class="px-bubble mascot">Want to dress up? I'm great at waiting.</div>
+</div>
+
+<div class="px-taskbar">
+  <button class="px-btn">▤ Start</button>
+  <button class="px-btn px-taskbar__task">📄 readme</button>
+  <button class="px-btn px-taskbar__task" aria-pressed="true">👗 Closet.exe</button>
+  <span class="px-taskbar__tray">🔈 17:13</span>
+</div>
+</body>
+</html>

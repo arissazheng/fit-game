@@ -1,232 +1,266 @@
-/* Pixel UI — tokens + components for Fashion in Pixels.
-   Import once globally. Palette is PROVISIONAL: swap :root values to match the
-   reference site; components only use tokens. */
+/* Pixel UI — retro desktop (Win95/98-style) tokens + components for Fashion in Pixels.
+   Reference: pixel-converter.ameniwa.com UI chrome (not its anime artwork).
 
-/* For best load performance, put these in <head> instead of @import:
+   Fonts: put these in <head> for best load performance (the @import below is a fallback):
    <link rel="preconnect" href="https://fonts.googleapis.com">
    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet"> */
 @import url("https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Pixelify+Sans:wght@400..700&display=swap");
 
 :root {
-  /* grid */
-  --px: 4px;
+  /* bevel line width. 1px = faithful; 2px = chunkier "zoomed-in" look */
+  --b: 2px;
 
-  /* palette (provisional pixel-pastel) */
-  --px-ink: #2b2140;        /* outlines, body text */
-  --px-cream: #fff7e8;      /* panel fill */
-  --px-paper: #f3e6d0;      /* page background */
-  --px-paper-2: #e9d6ba;    /* pattern alt tile */
-  --px-shade: #c9b394;      /* inset / pressed */
-  --px-primary: #ff7eb6;    /* main accent (pink) */
-  --px-primary-hi: #ffa8cf;
-  --px-secondary: #7ec8ff;  /* sky blue */
-  --px-accent: #ffd45e;     /* coins, stars */
-  --px-success: #7fd88f;
-  --px-danger: #ff5e5e;
+  /* desktop */
+  --desk: #008080;            /* teal desktop */
+  --desk-dark: #006868;       /* side gutters */
 
-  /* type */
-  --px-font-pixel: "Pixelify Sans", monospace;           /* headings, UI chrome, numbers, default */
-  --px-font-text: "Google Sans", system-ui, sans-serif;   /* paragraphs, fine print, inputs */
-  /* aliases used by components */
-  --px-font-display: var(--px-font-pixel);
-  --px-font-body: var(--px-font-pixel);
-  --px-font-num: var(--px-font-pixel);
+  /* window chrome (classic silver) */
+  --face: #c0c0c0;            /* window + button face */
+  --hi: #ffffff;              /* bevel highlight */
+  --light: #dfdfdf;           /* bevel inner light */
+  --shadow: #808080;          /* bevel inner shadow */
+  --dark: #0a0a0a;            /* bevel outer shadow */
+  --text: #000000;
+  --text-disabled: #808080;
 
-  /* shadows (hard, no blur) */
-  --px-shadow: calc(var(--px) * 1) calc(var(--px) * 1) 0 var(--px-ink);
-  --px-shadow-lg: calc(var(--px) * 2) calc(var(--px) * 2) 0 var(--px-ink);
+  /* title bars + selection */
+  --title-a: #000080;         /* navy */
+  --title-b: #1084d0;         /* bright blue */
+  --title-text: #ffffff;
+  --title-inactive-a: #808080;
+  --title-inactive-b: #b5b5b5;
+  --select: #000080;          /* selected button / list item fill */
+  --select-text: #ffffff;
+
+  /* misc */
+  --well: #000000;            /* preview / stage well */
+  --well-text: #808080;
+  --bubble: #ffffe1;          /* tooltip / speech bubble */
+  --danger: #c00000;
+
+  /* fonts */
+  --font-pixel: "Pixelify Sans", monospace;               /* all UI chrome (default) */
+  --font-text: "Google Sans", system-ui, sans-serif;      /* paragraphs, fine print */
+
+  /* bevels (2-line inset shadows) */
+  --bevel-raised:
+    inset calc(var(--b) * -1) calc(var(--b) * -1) var(--dark),
+    inset var(--b) var(--b) var(--hi),
+    inset calc(var(--b) * -2) calc(var(--b) * -2) var(--shadow),
+    inset calc(var(--b) * 2) calc(var(--b) * 2) var(--light);
+  --bevel-pressed:
+    inset calc(var(--b) * -1) calc(var(--b) * -1) var(--hi),
+    inset var(--b) var(--b) var(--dark),
+    inset calc(var(--b) * -2) calc(var(--b) * -2) var(--light),
+    inset calc(var(--b) * 2) calc(var(--b) * 2) var(--shadow);
+  --bevel-window:
+    inset calc(var(--b) * -1) calc(var(--b) * -1) var(--dark),
+    inset var(--b) var(--b) var(--light),
+    inset calc(var(--b) * -2) calc(var(--b) * -2) var(--shadow),
+    inset calc(var(--b) * 2) calc(var(--b) * 2) var(--hi);
+  --bevel-sunken: var(--bevel-pressed);
+  --bevel-status:
+    inset calc(var(--b) * -1) calc(var(--b) * -1) var(--hi),
+    inset var(--b) var(--b) var(--shadow);
 }
 
 /* ---------- base ---------- */
-html { background: var(--px-paper); color: var(--px-ink); }
+html, body { height: 100%; }
 body {
   margin: 0;
-  font-family: var(--px-font-body);
+  background: var(--desk);
+  color: var(--text);
+  font-family: var(--font-pixel);
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
   -webkit-font-smoothing: none;
-  -moz-osx-font-smoothing: grayscale;
-  font-smooth: never;
 }
-h1, h2, h3, .px-display {
-  font-family: var(--px-font-display);
-  font-weight: 700;
-  line-height: 1.4;
-  text-transform: uppercase;
+* { box-sizing: border-box; }
+p, small, .px-text {
+  font-family: var(--font-text);
   letter-spacing: 0;
-}
-h1 { font-size: 48px; } h2 { font-size: 32px; } h3 { font-size: 24px; }
-
-/* readable non-pixel text */
-p, .px-text, small, .px-input {
-  font-family: var(--px-font-text);
   -webkit-font-smoothing: antialiased;
 }
-.px-text--pixel { font-family: var(--px-font-pixel); }
-* { border-radius: 0 !important; }
+.px-text--pixel { font-family: var(--font-pixel); }
+img, canvas, .px-img { image-rendering: pixelated; }
+:focus-visible { outline: 1px dotted var(--text); outline-offset: -5px; }
 
-.px-img, img, canvas {
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-}
-
-:focus-visible {
-  outline: var(--px) dashed var(--px-ink);
-  outline-offset: var(--px);
-}
-
-/* ---------- box: notched-corner pixel border ---------- */
-.px-box {
+/* ---------- desktop ---------- */
+.px-desktop {
+  min-height: 100vh;
+  background: var(--desk);
   position: relative;
-  background: var(--px-cream);
-  padding: calc(var(--px) * 4);
-  margin: var(--px);
-  /* 4 edge strips + drop shadow; corners stay notched */
-  box-shadow:
-    0 calc(var(--px) * -1) 0 0 var(--px-ink),
-    0 var(--px) 0 0 var(--px-ink),
-    calc(var(--px) * -1) 0 0 0 var(--px-ink),
-    var(--px) 0 0 0 var(--px-ink),
-    calc(var(--px) * 2) calc(var(--px) * 2) 0 0 var(--px-ink);
+  padding: 16px 16px 60px; /* room for taskbar */
 }
+.px-icon {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  width: 88px; padding: 4px;
+  font: 14px var(--font-pixel); color: #fff; text-align: center;
+  background: none; border: 0; cursor: pointer;
+  text-shadow: 1px 1px 0 #000;
+}
+.px-icon img { width: 48px; height: 48px; }
+.px-icon[aria-selected="true"] span { background: var(--select); outline: 1px dotted #fff; }
 
 /* ---------- window ---------- */
-.px-window { padding: 0; }
-.px-window__title {
-  display: flex; align-items: center; justify-content: space-between;
-  background: var(--px-primary);
-  color: var(--px-cream);
-  font-family: var(--px-font-display);
-  font-size: 18px; font-weight: 600;
-  padding: calc(var(--px) * 2) calc(var(--px) * 3);
-  border-bottom: var(--px) solid var(--px-ink);
-  text-shadow: var(--px-shadow);
+.px-window {
+  background: var(--face);
+  box-shadow: var(--bevel-window);
+  padding: calc(var(--b) * 3);
+  display: flex; flex-direction: column;
 }
-.px-window__body { padding: calc(var(--px) * 4); }
+.px-titlebar {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: linear-gradient(90deg, var(--title-a), var(--title-b));
+  color: var(--title-text);
+  padding: 3px 3px 3px 6px;
+  font-size: 18px; letter-spacing: 0.08em;
+  user-select: none;
+}
+.px-window.is-inactive .px-titlebar {
+  background: linear-gradient(90deg, var(--title-inactive-a), var(--title-inactive-b));
+  color: var(--light);
+}
+.px-titlebar__controls { display: flex; gap: 2px; }
+.px-titlebar__controls button {
+  width: 24px; height: 22px; padding: 0;
+  font: 700 14px/1 var(--font-pixel); color: var(--text);
+  background: var(--face); border: 0; box-shadow: var(--bevel-raised);
+  display: grid; place-items: center; cursor: pointer;
+}
+.px-titlebar__controls button:active { box-shadow: var(--bevel-pressed); }
+.px-titlebar__controls button:last-child { margin-left: 2px; } /* gap before close */
 
-/* ---------- button ---------- */
+.px-menubar { display: flex; gap: 4px; padding: 2px 0; }
+.px-menubar button {
+  font: inherit; color: var(--text); background: none; border: 0; padding: 4px 10px; cursor: pointer;
+}
+.px-menubar button:hover, .px-menubar button[aria-expanded="true"] { background: var(--select); color: var(--select-text); }
+
+.px-window__body { padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+
+/* section labels like "SIZE", "FX" */
+.px-label { text-transform: uppercase; font-size: 18px; letter-spacing: 0.1em; }
+
+/* ---------- buttons ---------- */
 .px-btn {
-  font-family: var(--px-font-display);
-  font-size: 18px; font-weight: 600;
-  text-transform: uppercase;
-  color: var(--px-ink);
-  background: var(--px-cream);
-  border: var(--px) solid var(--px-ink);
-  padding: calc(var(--px) * 3) calc(var(--px) * 4);
-  box-shadow: var(--px-shadow), inset calc(var(--px) * -1) calc(var(--px) * -1) 0 var(--px-shade);
-  cursor: pointer;
-  transition: transform 80ms steps(1), box-shadow 80ms steps(1);
-}
-.px-btn:hover { transform: translate(0, calc(var(--px) * -1)); box-shadow: var(--px-shadow-lg), inset calc(var(--px) * -1) calc(var(--px) * -1) 0 var(--px-shade); }
-.px-btn:active { transform: translate(var(--px), var(--px)); box-shadow: inset var(--px) var(--px) 0 var(--px-shade); }
-.px-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-.px-btn--primary { background: var(--px-primary); color: var(--px-cream); box-shadow: var(--px-shadow), inset calc(var(--px) * -1) calc(var(--px) * -1) 0 #d95a92; }
-.px-btn--primary:hover { background: var(--px-primary-hi); }
-.px-btn--danger { background: var(--px-danger); color: var(--px-cream); }
-
-/* ---------- tabs ---------- */
-.px-tabs { display: flex; gap: var(--px); margin-bottom: calc(var(--px) * -1); }
-.px-tab {
-  font-family: var(--px-font-display); font-size: 16px; font-weight: 500; text-transform: uppercase;
-  background: var(--px-shade); color: var(--px-ink);
-  border: var(--px) solid var(--px-ink); border-bottom: none;
-  padding: calc(var(--px) * 2) calc(var(--px) * 3);
+  font: inherit; color: var(--text);
+  min-width: 72px; min-height: 36px; padding: 4px 12px;
+  background: var(--face); border: 0;
+  box-shadow: var(--bevel-raised);
   cursor: pointer;
 }
-.px-tab[aria-selected="true"] {
-  background: var(--px-cream);
-  padding-bottom: calc(var(--px) * 3);
-  position: relative; z-index: 1;
+.px-btn:active { box-shadow: var(--bevel-pressed); padding: 5px 11px 3px 13px; }
+.px-btn[aria-pressed="true"], .px-btn.is-selected {
+  background: var(--select); color: var(--select-text);
+  box-shadow: inset 0 0 0 var(--b) var(--dark), inset 0 0 0 calc(var(--b) * 2) var(--hi);
 }
+.px-btn:disabled { color: var(--text-disabled); text-shadow: 1px 1px 0 var(--hi); cursor: default; }
+.px-btn--wide { width: 100%; min-height: 44px; letter-spacing: 0.12em; text-transform: uppercase; }
+.px-btn-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.px-btn-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
 
-/* ---------- input ---------- */
+/* swatch button (palette / outfit colorway): color strip over a label */
+.px-swatch { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 8px; }
+.px-swatch__colors { display: flex; gap: 2px; }
+.px-swatch__colors i { width: 10px; height: 10px; display: block; }
+
+/* ---------- fields ---------- */
 .px-input {
-  font-size: 16px;
-  color: var(--px-ink); background: var(--px-cream);
-  border: var(--px) solid var(--px-ink);
-  box-shadow: inset var(--px) var(--px) 0 var(--px-shade);
-  padding: calc(var(--px) * 2) calc(var(--px) * 3);
-  outline: none;
+  font: 16px var(--font-text); color: var(--text);
+  background: #fff; border: 0; box-shadow: var(--bevel-sunken);
+  padding: 8px 10px; outline: none;
 }
-.px-input:focus { background: #fff; }
+.px-check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.px-check input {
+  appearance: none; width: 22px; height: 22px; margin: 0;
+  background: #fff; box-shadow: var(--bevel-sunken); display: grid; place-items: center;
+}
+.px-check input:checked::after { content: "✓"; font: 700 16px/1 var(--font-pixel); color: var(--text); }
 
-/* ---------- segmented bar (timer/progress) ---------- */
-.px-bar {
-  --value: 1; /* 0..1 */
-  --seg: var(--px-success);
-  height: calc(var(--px) * 5);
-  border: var(--px) solid var(--px-ink);
-  background:
-    repeating-linear-gradient(90deg, transparent 0 calc(var(--px) * 3), var(--px-ink) 0 calc(var(--px) * 4)) ,
-    linear-gradient(90deg, var(--seg) calc(var(--value) * 100%), var(--px-shade) 0);
-  /* hard stops only; reads as discrete blocks */
+/* sunken black well: preview / runway stage / avatar viewport */
+.px-well {
+  background: var(--well); color: var(--well-text);
+  box-shadow: var(--bevel-sunken);
+  padding: calc(var(--b) * 2);
+  display: grid; place-items: center;
+  position: relative;
 }
-.px-bar--danger { --seg: var(--px-danger); animation: px-blink 500ms steps(2) infinite; }
+.px-well__empty { text-align: center; font-size: 20px; letter-spacing: 0.08em; }
 
-/* ---------- stars ---------- */
-.px-stars { display: inline-flex; gap: var(--px); }
-.px-stars input { position: absolute; opacity: 0; pointer-events: none; }
-.px-stars label {
-  width: 24px; height: 24px; cursor: pointer;
-  background: var(--px-shade);
-  /* 8x8 pixel star mask */
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'%3E%3Cpath d='M3 0h2v2h3v2H7v2h1v2H6V7H2v1H0V6h1V4H0V2h3z'/%3E%3C/svg%3E") center/100% no-repeat;
-          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'%3E%3Cpath d='M3 0h2v2h3v2H7v2h1v2H6V7H2v1H0V6h1V4H0V2h3z'/%3E%3C/svg%3E") center/100% no-repeat;
-}
-.px-stars label.is-on, .px-stars label:hover { background: var(--px-accent); }
-.px-stars input:focus-visible + label { outline: var(--px) dashed var(--px-ink); }
-
-/* ---------- banner / chip / slot ---------- */
-.px-banner {
-  display: inline-block;
-  font-family: var(--px-font-display); font-size: 24px; font-weight: 700; text-transform: uppercase;
-  background: var(--px-accent); color: var(--px-ink);
-  border: var(--px) solid var(--px-ink);
-  box-shadow: var(--px-shadow-lg);
-  padding: calc(var(--px) * 3) calc(var(--px) * 6);
-}
-.px-chip {
-  display: inline-flex; align-items: center; gap: var(--px);
-  font-family: var(--px-font-num); font-size: 18px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums;
-  background: var(--px-cream); border: var(--px) solid var(--px-ink);
-  padding: var(--px) calc(var(--px) * 2);
-}
+/* inventory slot (closet grid) */
 .px-slot {
-  aspect-ratio: 1; display: grid; place-items: center;
-  background: var(--px-paper); border: var(--px) solid var(--px-ink);
-  box-shadow: inset var(--px) var(--px) 0 var(--px-shade);
-  cursor: pointer;
+  aspect-ratio: 1; padding: 6px;
+  background: #fff; box-shadow: var(--bevel-sunken);
+  display: grid; place-items: center; cursor: pointer; border: 0;
 }
-.px-slot:hover { background: var(--px-cream); }
-.px-slot[aria-selected="true"] {
-  border-color: var(--px-primary);
-  background: var(--px-cream);
-  animation: px-bounce 400ms steps(4);
-}
+.px-slot[aria-selected="true"] { background: var(--select); }
 .px-slot img { width: 100%; height: 100%; object-fit: contain; }
 
-/* ---------- backgrounds (pure CSS, hard edges) ---------- */
-.px-bg-checker {
-  background-color: var(--px-paper);
-  background-image:
-    linear-gradient(45deg, var(--px-paper-2) 25%, transparent 25%, transparent 75%, var(--px-paper-2) 75%),
-    linear-gradient(45deg, var(--px-paper-2) 25%, transparent 25%, transparent 75%, var(--px-paper-2) 75%);
-  background-size: 32px 32px;
-  background-position: 0 0, 16px 16px;
+/* tabs (closet categories) */
+.px-tabs { display: flex; padding-left: 4px; position: relative; z-index: 1; margin-bottom: calc(var(--b) * -2); }
+.px-tab {
+  font: inherit; color: var(--text); background: var(--face); border: 0;
+  padding: 6px 14px 4px; margin-top: 4px; cursor: pointer;
+  box-shadow:
+    inset var(--b) var(--b) var(--hi),
+    inset calc(var(--b) * -1) 0 var(--dark),
+    inset calc(var(--b) * -2) 0 var(--shadow);
 }
-.px-bg-dots {
-  /* one 4px dot per 16px tile */
-  background:
-    conic-gradient(from 90deg at var(--px) var(--px), var(--px-paper) 25%, var(--px-paper-2) 0) 0 0 / 16px 16px;
+.px-tab[aria-selected="true"] { margin-top: 0; padding-bottom: 10px; position: relative; z-index: 2; }
+.px-tabpanel { background: var(--face); box-shadow: var(--bevel-window); padding: 12px; }
+
+/* progress / timer bar: chunky blue blocks in a sunken track */
+.px-progress {
+  --value: 1; /* 0..1 */
+  height: 26px; padding: calc(var(--b) * 2);
+  background: #fff; box-shadow: var(--bevel-sunken);
+}
+.px-progress > i {
+  display: block; height: 100%; width: calc(var(--value) * 100%);
+  background: repeating-linear-gradient(90deg, var(--select) 0 12px, transparent 12px 14px);
+  transition: width 200ms steps(4);
+}
+.px-progress.is-danger > i { background: repeating-linear-gradient(90deg, var(--danger) 0 12px, transparent 12px 14px); }
+
+/* ---------- status bar ---------- */
+.px-statusbar { display: flex; gap: 4px; margin-top: 4px; }
+.px-statusbar > * { box-shadow: var(--bevel-status); padding: 2px 8px; font-size: 15px; }
+.px-statusbar > :first-child { flex: 1; }
+
+/* ---------- taskbar ---------- */
+.px-taskbar {
+  position: fixed; left: 0; right: 0; bottom: 0; height: 46px;
+  background: var(--face);
+  box-shadow: inset 0 var(--b) var(--light), inset 0 calc(var(--b) * 2) var(--hi);
+  display: flex; align-items: center; gap: 6px; padding: 4px 6px;
+  z-index: 100;
+}
+.px-taskbar .px-btn { min-height: 34px; display: inline-flex; align-items: center; gap: 6px; }
+.px-taskbar__task { min-width: 180px; justify-content: flex-start; }
+.px-taskbar__tray { margin-left: auto; box-shadow: var(--bevel-status); padding: 4px 12px; display: flex; gap: 8px; align-items: center; }
+
+/* ---------- speech bubble (host/mascot tips, theme announcer) ---------- */
+.px-bubble {
+  position: relative; max-width: 280px;
+  background: var(--bubble); color: var(--text);
+  border: 1px solid var(--dark);
+  border-radius: 10px;           /* the one rounded element, as in the reference */
+  padding: 12px 16px; font-size: 18px; line-height: 1.5;
+}
+.px-bubble::after {
+  content: ""; position: absolute; right: -10px; top: 50%;
+  border: 8px solid transparent; border-left: 10px solid var(--bubble); border-right: 0;
+  transform: translateY(-50%);
 }
 
-/* ---------- motion (stepped) ---------- */
-@keyframes px-bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(calc(var(--px) * -2)); } }
-@keyframes px-blink { 50% { opacity: .4; } }
-@keyframes px-pop { 0% { transform: scale(0); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
-.px-pop { animation: px-pop 300ms steps(3); }
-
+/* ---------- motion ---------- */
+@keyframes px-blink { 50% { opacity: 0; } }
+@keyframes px-pop { 0% { transform: scale(0); } 60% { transform: scale(1.2); } 100% { transform: scale(1); } }
+.px-blink { animation: px-blink 1s steps(1) infinite; }
+.px-pop { animation: px-pop 240ms steps(3); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
