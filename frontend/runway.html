@@ -8,6 +8,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="pixel-ui.css">
+<script src="avatar.js"></script>
+<script src="game.js"></script>
+<script src="room.js"></script>
 <script>
   // The runway only opens when the outfit builder's timer ends; otherwise go back to the lobby.
   (function () {
@@ -18,6 +21,11 @@
 </script>
 <style>
   .stage { flex: 1; min-height: 240px; }
+  .lineup { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 24px; padding: 16px; }
+  .model { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--light); max-width: 200px; text-align: center; }
+  .model canvas { width: 128px; height: 192px; }
+  .model .who { background: var(--select); color: var(--select-text); padding: 2px 10px; }
+  .model .what { font-size: 13px; color: var(--shadow); }
   .look { text-align: center; color: var(--light); display: flex; flex-direction: column; gap: 8px; font-size: 20px; }
   .look dt { color: var(--shadow); font-size: 15px; text-transform: uppercase; letter-spacing: 0.1em; }
   .look dd { margin: 0 0 8px; }
@@ -38,9 +46,10 @@
         <div class="px-titlebar"><span id="title">Runway.exe</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
         <div class="px-window__body" style="flex:1; min-height:0">
           <div class="px-well stage">
+            <div class="lineup" id="lineup"></div>
             <dl class="look" id="look"><dt>Runway coming soon</dt></dl>
           </div>
-          <a class="px-btn px-btn--wide" href="index.html" style="display:grid;place-items:center;text-decoration:none">Back to lobby</a>
+          <a class="px-btn px-btn--wide" href="index.html" id="lobby-link" style="display:grid;place-items:center;text-decoration:none">Back to lobby</a>
         </div>
       </div>
     </div>
@@ -55,22 +64,44 @@
 </div>
 
 <script>
-  var outfit = null;
-  try { outfit = JSON.parse(localStorage.getItem('fip.outfit')); } catch (err) { /* storage blocked */ }
+  document.getElementById('lobby-link').href = FIP.withRoom('index.html');
+  var title = document.getElementById('title');
+  var lineup = document.getElementById('lineup');
   var look = document.getElementById('look');
-  if (outfit) {
-    document.getElementById('title').textContent = 'Runway.exe · THEME: ' + outfit.theme;
-    var rows = [['Top', outfit.top], ['Bottom', outfit.bottom], ['Dress', outfit.dress],
-                ['Accessories', outfit.accessories.join(', ')]];
-    look.innerHTML = '<dt>Your saved look</dt>';
-    rows.forEach(function (r) {
-      if (!r[1]) return;
-      var dt = document.createElement('dt'); dt.textContent = r[0];
-      var dd = document.createElement('dd'); dd.textContent = r[1];
-      look.append(dt, dd);
-    });
-  } else {
-    document.getElementById('status-msg').textContent = 'No saved outfit found';
+
+  function model(name, avatarLook, outfit) {
+    var box = document.createElement('div'); box.className = 'model';
+    var c = document.createElement('canvas'); c.className = 'px-img';
+    FIPAvatar.render(c, avatarLook, outfit);
+    var who = document.createElement('div'); who.className = 'who'; who.textContent = name || 'Player';
+    var what = document.createElement('div'); what.className = 'what';
+    what.textContent = [outfit.dress, outfit.top, outfit.bottom].filter(Boolean).concat(outfit.accessories || []).join(' · ') || 'plain fit';
+    box.append(c, who, what);
+    return box;
+  }
+
+  // Online: show every player's saved look as it arrives from the server.
+  var game = FIP.connectGame({
+    onOpen: function () { game.send({ type: 'getOutfits' }); },
+    onOutfits: function (m) {
+      if (m.round) title.textContent = 'Runway.exe · THEME: ' + m.round.theme;
+      lineup.innerHTML = '';
+      m.outfits.forEach(function (o) { lineup.appendChild(model(o.name, o.look, o.outfit)); });
+      look.innerHTML = '<dt>' + m.outfits.length + (m.outfits.length === 1 ? ' look' : ' looks') + ' on the runway · voting coming soon</dt>';
+      document.getElementById('status-msg').textContent = 'Outfits saved';
+    },
+    onOffline: showLocal
+  });
+
+  // Offline (no game server): show this browser's own saved look.
+  function showLocal() {
+    var outfit = null;
+    try { outfit = JSON.parse(localStorage.getItem('fip.outfit')); } catch (err) { /* storage blocked */ }
+    if (!outfit) { document.getElementById('status-msg').textContent = 'No saved outfit found'; return; }
+    var me = FIP.store.getAvatar();
+    title.textContent = 'Runway.exe · THEME: ' + outfit.theme;
+    lineup.appendChild(model(me.name, me, outfit));
+    look.innerHTML = '<dt>Your saved look · voting coming soon</dt>';
   }
 </script>
 </body>

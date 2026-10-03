@@ -4,6 +4,7 @@ import { config } from './config.ts'
 import './db/db.ts'
 import { pixelizeRouter } from './routes/pixelize.ts'
 import { uploadsRouter } from './routes/uploads.ts'
+import { attachRooms } from './rooms.ts'
 
 await mkdir(config.uploadsDir, { recursive: true })
 await mkdir(config.processedDir, { recursive: true })
@@ -35,6 +36,8 @@ app.use('/api/photos', pixelizeRouter)
 // straight off disk. express.static serves index.html for "/" automatically.
 app.use(express.static(config.frontendDir))
 
-app.listen(config.port, () => {
+const httpServer = app.listen(config.port, () => {
   console.log(`Fit Game running at http://localhost:${config.port}`)
 })
+
+attachRooms(httpServer)

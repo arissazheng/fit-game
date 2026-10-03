@@ -49,11 +49,18 @@
   }
 
   FIP.store = {
+    // Each tab is its own player: the tab's look lives in sessionStorage, and localStorage remembers
+    // the last look as the starting point for the next visit.
     getAvatar: function () {
       var d = root.FIPAvatar ? root.FIPAvatar.DEFAULT_LOOK : {};
-      return Object.assign({ name: '' }, d, read(KEYS.avatar, {}));
+      var tab = null;
+      try { tab = JSON.parse(sessionStorage.getItem(KEYS.avatar)); } catch (e) {}
+      return Object.assign({ name: '' }, d, tab || read(KEYS.avatar, {}));
     },
-    setAvatar: function (look) { return write(KEYS.avatar, look); },
+    setAvatar: function (look) {
+      try { sessionStorage.setItem(KEYS.avatar, JSON.stringify(look)); } catch (e) {}
+      return write(KEYS.avatar, look);
+    },
     getPhotos: function () { return read(KEYS.photos, []); },
     setPhotos: function (list) { return write(KEYS.photos, list); }
   };
