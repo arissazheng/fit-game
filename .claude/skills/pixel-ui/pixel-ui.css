@@ -233,6 +233,18 @@ img, canvas, .px-img { image-rendering: pixelated; }
 .px-slot[aria-selected="true"] { background: var(--select); }
 .px-slot img { width: 100%; height: 100%; object-fit: contain; }
 
+/* upload thumbnails (Upload.exe): grid of photo slots with a small remove button */
+.thumbs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.thumbs:empty { display: none; }
+.thumb { position: relative; padding: 3px; cursor: default; }
+.thumb img { object-fit: cover; }
+.thumb__remove {
+  position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; padding: 0;
+  font: 700 13px/1 var(--font-pixel); color: var(--text);
+  background: var(--face); border: 0; box-shadow: var(--bevel-raised); cursor: pointer;
+}
+.thumb__remove:active { box-shadow: var(--bevel-pressed); }
+
 /* tabs (closet categories). Behavior (click / arrow keys / show one panel) is in pixel-ui.js.
    The selected tab rises above the others and overlaps the panel's top edge so the two read as one piece. */
 .px-tabs { display: flex; align-items: flex-end; padding-left: 4px; position: relative; z-index: 1; }

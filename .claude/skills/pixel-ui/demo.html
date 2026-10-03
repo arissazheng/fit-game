@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="pixel-ui.css">
 <script src="pixel-ui.js" defer></script>
 <script src="themes.js"></script>
+<script src="avatar.js"></script>
+<script src="game.js"></script>
 <style>
   .cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(300px, 28%) minmax(0, 1fr); gap: 12px; }
   .left { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: auto; }
@@ -27,10 +29,6 @@
   .px-slot .item { font-size: 32px; line-height: 1; } /* placeholder sprites until real pixel items exist */
   .upload-drop { height: 96px; }
   .upload-drop .px-well__empty { font-size: 16px; }
-  .thumbs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
-  .thumbs:empty { display: none; }
-  .thumbs .px-slot { padding: 3px; }
-  .thumbs img { object-fit: cover; }
   @media (max-width: 860px) {
     .cols { grid-template-columns: minmax(0, 1fr); }
   }
@@ -66,7 +64,7 @@
                 <div class="px-tabpanel px-scroll px-scroll--always" role="tabpanel" id="panel-tops" aria-labelledby="tab-tops">
                   <div class="slots">
                     <button class="px-slot" title="White tee" aria-label="White tee"><span class="item">👕</span></button>
-                    <button class="px-slot" title="Pink blouse" aria-label="Pink blouse" aria-selected="true"><span class="item">👚</span></button>
+                    <button class="px-slot" title="Pink blouse" aria-label="Pink blouse"><span class="item">👚</span></button>
                     <button class="px-slot" title="Denim jacket" aria-label="Denim jacket"><span class="item">🧥</span></button>
                     <button class="px-slot" title="Black tank top" aria-label="Black tank top"><span class="item">🎽</span></button>
                     <button class="px-slot" title="Striped button-up" aria-label="Striped button-up"><span class="item">👔</span></button>
@@ -155,7 +153,7 @@
           <div class="px-window__body">
             <div class="px-progress" id="timer-bar" style="--value:1"><i></i></div>
             <div class="px-well stage" id="avatar-stage">
-              <canvas id="avatar" class="px-img" width="64" height="128" role="img" aria-label="Your avatar"></canvas>
+              <canvas id="avatar" class="px-img" width="64" height="96" role="img" aria-label="Your avatar"></canvas>
               <div class="avatar-caption" id="avatar-caption">Default fit</div>
             </div>
             <button class="px-btn px-btn--wide" id="lock-btn">↓ Lock in outfit</button>
@@ -175,8 +173,8 @@
   <span class="px-taskbar__tray">🔈 17:13</span>
 </div>
 <script>
-  // A round lasts from Start to the podium. Pick one random theme per round.
-  // In the demo, loading the page starts a round (refresh = new round).
+  // A round lasts from Start (in the lobby, index.html) to the podium. Pick one random theme per round.
+  // In this prototype, arriving on this page starts a round.
   // In the real game, the host calls startRound() on Start and broadcasts the theme to every player.
   function startRound() {
     var t = FIP.pickTheme();
@@ -237,88 +235,19 @@
   });
 
   // ---------- Avatar ----------
-  // Placeholder avatar on the 64x128 spec canvas (see the avatar slot spec). Clothes are drawn as
-  // simple pixel shapes colored from the item name, until real extracted sprites replace them:
-  // then each item becomes a full 64x128 transparent PNG stacked in layer order
-  // body -> bottom -> shoes -> top -> dress -> outerwear -> neck -> bag -> face -> head.
+  // The avatar built in the lobby (skin, hair, hairstyle), dressed live from closet picks.
+  // Shared renderer: avatar.js. Clothes are placeholder pixel shapes until extracted sprites exist.
   var avatar = document.getElementById('avatar');
-  var ctx = avatar.getContext('2d');
-  var SKIN = '#e8b896', HAIR = '#2b1b14', INK = '#1a1a1a';
-  var COLORS = [['black', '#1b1b1f'], ['white', '#f2f2f2'], ['pink', '#f28cb8'], ['navy', '#1f2f6b'],
-    ['denim', '#4a6fa5'], ['jean', '#4a6fa5'], ['blue', '#4a90d9'], ['gray', '#8a8d93'], ['lilac', '#b9a3e3'],
-    ['red', '#d23b3b'], ['plaid', '#a23b3b'], ['leather', '#3a2a22'], ['linen', '#e6dcc4'], ['cargo', '#6b6b47'],
-    ['trench', '#b8955e'], ['sun', '#f5c542'], ['silk', '#d9a6c9'], ['maxi', '#7fbf9a'], ['kimono', '#e98fa8'],
-    ['sari', '#2fae9b'], ['khaki', '#b8a06a'], ['band', '#2a2a2a'], ['puffer', '#e0563a'], ['lace', '#f4efe6']];
-  function colorFor(name) {
-    var n = name.toLowerCase();
-    for (var i = 0; i < COLORS.length; i++) if (n.indexOf(COLORS[i][0]) !== -1) return COLORS[i][1];
-    var h = 0; for (var j = 0; j < n.length; j++) h = (h * 31 + n.charCodeAt(j)) % 360;
-    return 'hsl(' + h + ', 55%, 55%)';
-  }
-  function px(c, x, y, w, h) { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); }
-  function has(name, words) { return words.some(function (w) { return name.toLowerCase().indexOf(w) !== -1; }); }
-
+  var stage = document.getElementById('avatar-stage');
+  var look = FIP.store.getAvatar();
   function drawAvatar() {
     var o = currentOutfit();
-    ctx.clearRect(0, 0, 64, 128);
-    // body
-    px(SKIN, 24, 6, 16, 18);                                   // head
-    px(HAIR, 22, 2, 20, 7); px(HAIR, 22, 6, 3, 18); px(HAIR, 39, 6, 3, 18);
-    px(INK, 28, 14, 2, 2); px(INK, 34, 14, 2, 2); px('#c0605a', 31, 19, 2, 1);
-    px(SKIN, 29, 24, 6, 4);                                    // neck
-    px(SKIN, 22, 28, 20, 34);                                  // torso
-    px(SKIN, 16, 30, 6, 30); px(SKIN, 42, 30, 6, 30);          // arms
-    px(SKIN, 16, 60, 6, 5); px(SKIN, 42, 60, 6, 5);            // hands
-    px(SKIN, 24, 62, 7, 48); px(SKIN, 33, 62, 7, 48);          // legs
-    px('#3b3b44', 22, 110, 9, 6); px('#3b3b44', 33, 110, 9, 6); // shoes
-    if (o.dress) {
-      var d = colorFor(o.dress);
-      px(d, 22, 28, 20, 4); px(SKIN, 22, 28, 3, 2); px(SKIN, 39, 28, 3, 2);
-      for (var r = 0; r < 64; r++) { var grow = Math.floor(r / 10); px(d, 22 - grow, 32 + r, 20 + grow * 2, 1); }
-    } else {
-      if (o.bottom) {
-        var b = colorFor(o.bottom);
-        if (has(o.bottom, ['short', 'cutoff', 'skort'])) px(b, 23, 60, 18, 20);
-        else { px(b, 23, 60, 18, 6); px(b, 23, 66, 8, 44); px(b, 33, 66, 8, 44); }
-      } else {
-        px('#111114', 23, 60, 18, 18);                         // default black shorts
-      }
-      if (o.top) {
-        var t = colorFor(o.top);
-        px(t, 21, 28, 22, 36);
-        if (!has(o.top, ['tank', 'cami', 'halter', 'corset'])) {
-          var longSleeve = has(o.top, ['jacket', 'coat', 'blazer', 'cardigan', 'hoodie', 'flannel', 'shirt', 'overshirt', 'button']);
-          px(t, 16, 30, 6, longSleeve ? 28 : 12); px(t, 42, 30, 6, longSleeve ? 28 : 12);
-        }
-        if (has(o.top, ['jacket', 'coat', 'blazer', 'cardigan'])) px('#00000033', 31, 28, 2, 36);
-      } else {
-        px('#111114', 23, 30, 18, 32); px('#111114', 25, 28, 3, 2); px('#111114', 36, 28, 3, 2); // default black tank
-      }
-    }
-    o.accessories.forEach(function (a) {
-      var c = colorFor(a);
-      if (has(a, ['hat', 'cap'])) { px(c, 20, 0, 24, 6); if (has(a, ['sun'])) px(c, 16, 5, 32, 2); }
-      else if (has(a, ['glasses'])) { px(INK, 26, 13, 5, 4); px(INK, 33, 13, 5, 4); px(INK, 31, 14, 2, 1); }
-      else if (has(a, ['scarf'])) { px(c, 25, 24, 14, 5); px(c, 34, 29, 4, 10); }
-      else if (has(a, ['necklace'])) { px(c, 27, 28, 10, 1); px(c, 31, 29, 2, 2); }
-      else if (has(a, ['bag', 'purse', 'backpack'])) { px(c, 47, 30, 1, 22); px(c, 45, 52, 10, 10); }
-      else if (has(a, ['watch', 'ring'])) { px(c, 42, 57, 6, 2); }
-      else if (has(a, ['bow'])) { px(c, 37, 1, 8, 4); }
-      else { px(c, 46, 54, 6, 6); }
-    });
+    FIPAvatar.render(avatar, look, o);
     var parts = [o.dress, o.top, o.bottom].filter(Boolean).concat(o.accessories);
-    document.getElementById('avatar-caption').textContent = parts.length ? parts.join(' · ') : 'Default fit: black tank + shorts';
+    document.getElementById('avatar-caption').textContent = (look.name ? look.name + ': ' : '') +
+      (parts.length ? parts.join(' · ') : 'plain fit');
   }
-
-  // Scale the avatar by whole numbers only so pixels stay square.
-  var stage = document.getElementById('avatar-stage');
-  function fitAvatar() {
-    var scale = Math.max(1, Math.floor(Math.min((stage.clientHeight - 56) / 128, (stage.clientWidth - 16) / 64)));
-    avatar.style.width = 64 * scale + 'px';
-    avatar.style.height = 128 * scale + 'px';
-  }
-  new ResizeObserver(fitAvatar).observe(stage);
-  fitAvatar();
+  new ResizeObserver(function () { FIPAvatar.fit(avatar, stage, 16, 56); }).observe(stage);
   drawAvatar();
 
   // ---------- Round timer ----------
@@ -347,27 +276,12 @@
   tick();
 
 
-  // Upload.exe: keep up to 10 photos and show them as thumbnails
-  var photos = [];
-  document.getElementById('photo-zone').addEventListener('px-files', function (e) {
-    var room = 10 - photos.length;
-    var added = e.detail.files.slice(0, room);
-    added.forEach(function (file) {
-      photos.push(file);
-      var slot = document.createElement('div');
-      slot.className = 'px-slot';
-      slot.title = file.name;
-      var img = document.createElement('img');
-      img.src = URL.createObjectURL(file);
-      img.alt = file.name;
-      slot.appendChild(img);
-      document.getElementById('photo-thumbs').appendChild(slot);
-    });
-    document.getElementById('photo-count').textContent = photos.length + ' / 10';
-    var skipped = e.detail.files.length - added.length;
-    document.getElementById('status-msg').textContent = skipped
-      ? 'Closet is full: ' + skipped + ' photo' + (skipped === 1 ? '' : 's') + ' skipped (max 10)'
-      : added.length + (added.length === 1 ? ' photo' : ' photos') + ' added to your closet';
+  // Upload.exe: same photos as the lobby (saved in this browser), up to 10
+  FIP.mountUpload({
+    zone: document.getElementById('photo-zone'),
+    thumbs: document.getElementById('photo-thumbs'),
+    count: document.getElementById('photo-count'),
+    status: document.getElementById('status-msg')
   });
 </script>
 </body>

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lobby · Fashion in Pixels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="pixel-ui.css">
+<script src="pixel-ui.js" defer></script>
+<script src="avatar.js"></script>
+<script src="game.js"></script>
+<style>
+  .cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(300px, 28%) minmax(0, 1fr); gap: 12px; }
+  .left { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: auto; }
+  .stage-win { min-height: 0; }
+  .stage-win > .px-window__body { flex: 1; min-height: 0; }
+
+  /* avatar builder */
+  .swatches { display: flex; flex-wrap: wrap; gap: 4px; }
+  .swatch { min-width: 0; min-height: 0; width: 34px; height: 34px; padding: 6px; }
+  .swatch:active { padding: 7px 5px 5px 7px; }
+  .swatch i { display: block; width: 100%; height: 100%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35); }
+  .styles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .styles .px-btn { min-width: 0; padding-left: 4px; padding-right: 4px; }
+  .name-row { display: flex; gap: 6px; }
+  .name-row .px-input { flex: 1; min-width: 0; }
+
+  /* upload */
+  .upload-drop { height: 96px; }
+  .upload-drop .px-well__empty { font-size: 16px; }
+
+  /* stage */
+  .stage { flex: 1; min-height: 260px; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 28px; }
+  .floor { position: absolute; left: 8%; right: 8%; bottom: 44px; height: 10px; background: repeating-linear-gradient(90deg, #2a2a2a 0 16px, #1c1c1c 16px 32px); }
+  #avatar { display: block; position: relative; z-index: 1; }
+  .nametag { position: relative; z-index: 1; margin-top: 8px; padding: 2px 10px; background: var(--select); color: var(--select-text); font-size: 16px; }
+  .players { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .seat { padding: 4px 10px; box-shadow: var(--bevel-status); font-size: 15px; }
+  .seat--empty { color: var(--text-disabled); }
+
+  @media (max-width: 860px) {
+    .cols { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="px-desktop">
+  <div class="px-desktop__icons">
+    <button class="px-icon"><span style="font-size:36px">📄</span><span>readme</span></button>
+    <button class="px-icon" aria-selected="true"><span style="font-size:36px">🏠</span><span>Lobby</span></button>
+    <button class="px-icon"><span style="font-size:36px">🛍️</span><span>Market</span></button>
+  </div>
+
+  <div class="px-window px-window--main">
+    <div class="px-titlebar">
+      <span>FASHION IN PIXELS v1.0</span>
+      <span class="px-titlebar__controls"><button aria-label="Minimize">_</button><button aria-label="Maximize">□</button><button aria-label="Close">×</button></span>
+    </div>
+    <nav class="px-menubar"><button>File(F)</button><button>Edit(E)</button><button>View(V)</button><button>Help(H)</button></nav>
+
+    <div class="px-window__body cols">
+      <div class="left">
+        <div class="px-window">
+          <div class="px-titlebar"><span>Avatar.exe</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
+          <div class="px-window__body">
+            <label class="px-label" for="avatar-name">Name</label>
+            <div class="name-row">
+              <input class="px-input" id="avatar-name" maxlength="16" placeholder="Your name" autocomplete="nickname">
+              <button class="px-btn" id="shuffle-btn" type="button" title="Random look">Shuffle</button>
+            </div>
+            <span class="px-label">Skin</span>
+            <div class="swatches" id="skin-swatches" role="group" aria-label="Skin tone"></div>
+            <span class="px-label">Hair color</span>
+            <div class="swatches" id="hair-swatches" role="group" aria-label="Hair color"></div>
+            <span class="px-label">Hairstyle</span>
+            <div class="styles" id="style-buttons" role="group" aria-label="Hairstyle"></div>
+          </div>
+        </div>
+
+        <div class="px-window">
+          <div class="px-titlebar"><span>Upload.exe</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
+          <div class="px-window__body">
+            <span class="px-label">Your photos <span id="photo-count">0 / 10</span></span>
+            <div class="px-well px-dropzone upload-drop" id="photo-zone" data-preview="none" aria-label="Upload outfit photos">
+              <input type="file" id="photo-input" accept="image/*" multiple>
+              <div class="px-well__empty">🖼<br>Drag &amp; Drop<br>or Click</div>
+            </div>
+            <div class="thumbs" id="photo-thumbs"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-window stage-win">
+        <div class="px-titlebar"><span>Lobby.exe · Waiting for players</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
+        <div class="px-window__body">
+          <div class="px-well stage" id="avatar-stage">
+            <div class="floor" aria-hidden="true"></div>
+            <canvas id="avatar" class="px-img" width="64" height="96" role="img" aria-label="Your avatar"></canvas>
+            <div class="nametag" id="nametag">You</div>
+          </div>
+          <div class="players" aria-label="Players in this room">
+            <span class="px-label">Players</span>
+            <span class="seat" id="seat-you">You</span>
+            <span class="seat seat--empty">Waiting...</span>
+            <span class="seat seat--empty">Waiting...</span>
+            <span class="seat seat--empty">Waiting...</span>
+          </div>
+          <button class="px-btn px-btn--wide" id="start-btn">▶ Start game</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-statusbar"><span id="status-msg">Build your avatar and add up to 10 outfit photos, then press Start</span><span id="player-count">1 / 8 players</span></div>
+  </div>
+</div>
+
+<div class="px-taskbar">
+  <button class="px-btn">▤ Start</button>
+  <button class="px-btn px-taskbar__task">📄 readme</button>
+  <button class="px-btn px-taskbar__task" aria-pressed="true">🏠 Lobby.exe</button>
+  <span class="px-taskbar__tray">🔈 17:12</span>
+</div>
+
+<script>
+  var A = FIPAvatar;
+  var look = FIP.store.getAvatar();
+  var canvas = document.getElementById('avatar');
+  var stage = document.getElementById('avatar-stage');
+  var nameInput = document.getElementById('avatar-name');
+
+  function draw() {
+    A.render(canvas, look);                 // lobby = plain outfit, no accessories
+    var name = look.name.trim() || 'You';
+    document.getElementById('nametag').textContent = name;
+    document.getElementById('seat-you').textContent = name + ' (you)';
+    FIP.store.setAvatar(look);
+  }
+
+  function makeChoices(container, items, key, render) {
+    items.forEach(function (item) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      render(btn, item);
+      btn.addEventListener('click', function () { look[key] = item.hex || item.id; sync(); draw(); });
+      btn.dataset.value = item.hex || item.id;
+      container.appendChild(btn);
+    });
+  }
+  function sync() {
+    [['skin-swatches', 'skin'], ['hair-swatches', 'hair'], ['style-buttons', 'style']].forEach(function (g) {
+      document.querySelectorAll('#' + g[0] + ' button').forEach(function (b) {
+        b.setAttribute('aria-pressed', b.dataset.value === look[g[1]] ? 'true' : 'false');
+      });
+    });
+    nameInput.value = look.name;
+  }
+  function swatch(btn, item) {
+    btn.className = 'px-btn swatch';
+    btn.title = item.name;
+    btn.setAttribute('aria-label', item.name);
+    var i = document.createElement('i'); i.style.background = item.hex; btn.appendChild(i);
+  }
+
+  makeChoices(document.getElementById('skin-swatches'), A.SKIN_TONES, 'skin', swatch);
+  makeChoices(document.getElementById('hair-swatches'), A.HAIR_COLORS, 'hair', swatch);
+  makeChoices(document.getElementById('style-buttons'), A.HAIRSTYLES, 'style', function (btn, item) {
+    btn.className = 'px-btn'; btn.textContent = item.name;
+  });
+
+  nameInput.addEventListener('input', function () { look.name = nameInput.value; draw(); });
+  document.getElementById('shuffle-btn').addEventListener('click', function () {
+    var pick = function (list) { return list[Math.floor(Math.random() * list.length)]; };
+    look.skin = pick(A.SKIN_TONES).hex; look.hair = pick(A.HAIR_COLORS).hex; look.style = pick(A.HAIRSTYLES).id;
+    sync(); draw();
+  });
+
+  new ResizeObserver(function () { A.fit(canvas, stage, 16, 90); }).observe(stage);
+
+  FIP.mountUpload({
+    zone: document.getElementById('photo-zone'),
+    thumbs: document.getElementById('photo-thumbs'),
+    count: document.getElementById('photo-count'),
+    status: document.getElementById('status-msg')
+  });
+
+  // Start: everyone moves to the outfit builder, where the round's theme and 1:00 timer begin.
+  // Real game: only the host's Start counts, and the server sends every player to the builder together.
+  document.getElementById('start-btn').addEventListener('click', function () {
+    if (!look.name.trim()) {
+      document.getElementById('status-msg').textContent = 'Enter a name before starting';
+      nameInput.focus();
+      return;
+    }
+    FIP.store.setAvatar(look);
+    location.href = 'demo.html';
+  });
+
+  sync();
+  draw();
+</script>
+</body>
+</html>
