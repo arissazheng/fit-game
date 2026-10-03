@@ -12,8 +12,9 @@
   --b: 2px;
 
   /* desktop */
-  --desk: #008080;            /* teal desktop */
-  --desk-dark: #006868;       /* side gutters */
+  --desk: #f7c8d9;            /* pastel pink desktop */
+  --desk-dark: #eaa9c3;       /* side gutters */
+  --desk-text: #4a2338;       /* desktop icon labels (deep plum reads on pastel pink) */
 
   /* window chrome (classic silver) */
   --face: #c0c0c0;            /* window + button face */
@@ -117,12 +118,12 @@ img, canvas, .px-img { image-rendering: pixelated; }
 .px-icon {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   width: 88px; padding: 4px;
-  font: 14px var(--font-pixel); color: #fff; text-align: center;
+  font: 14px var(--font-pixel); color: var(--desk-text); text-align: center;
   background: none; border: 0; cursor: pointer;
-  text-shadow: 1px 1px 0 #000;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.7);
 }
 .px-icon img { width: 48px; height: 48px; }
-.px-icon[aria-selected="true"] span { background: var(--select); outline: 1px dotted #fff; }
+.px-icon[aria-selected="true"] span { background: var(--select); color: var(--select-text); text-shadow: none; outline: 1px dotted #fff; }
 
 /* ---------- window ---------- */
 .px-window {

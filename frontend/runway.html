@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="pixel-ui.css">
+<script src="readme.js" defer></script>
 <script src="avatar.js"></script>
 <script src="game.js"></script>
 <script src="room.js"></script>
@@ -68,7 +69,9 @@
 </head>
 <body>
 <div class="px-desktop">
-  <div class="px-desktop__icons"></div>
+  <div class="px-desktop__icons">
+    <button class="px-icon" data-readme title="How to play"><span style="font-size:36px">📄</span><span>howto</span></button>
+  </div>
 
   <div class="px-window px-window--main">
     <div class="px-titlebar">
@@ -116,9 +119,8 @@
 </div>
 
 <div class="px-taskbar">
-  <button class="px-btn">▤ Start</button>
+  <button class="px-btn px-taskbar__task" data-readme title="How to play">📄 howto</button>
   <button class="px-btn px-taskbar__task" aria-pressed="true">👠 Runway.exe</button>
-  <span class="px-taskbar__tray">🔈 17:14</span>
 </div>
 
 <script>

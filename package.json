@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "predev": "node scripts/free-port.cjs 4000",
+    "start": "npm run start -w server",
     "dev": "npm run dev -w server",
     "dev:tools": "npm run dev -w client",
     "seed": "npm run seed -w server",
