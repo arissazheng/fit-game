@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { DevHome } from './dev/DevHome'
 import { PixelizePage } from './dev/pixelize/PixelizePage'
+import { ClosetScreen } from './screens/ClosetScreen'
 
 function subscribeToHash(callback: () => void) {
   window.addEventListener('hashchange', callback)
@@ -14,6 +15,7 @@ function useHash() {
 export function App() {
   const hash = useHash()
 
+  if (hash === '#/dev') return <DevHome />
   if (hash === '#/dev/pixelize') return <PixelizePage />
-  return <DevHome />
+  return <ClosetScreen />
 }

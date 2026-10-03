@@ -1,0 +1,64 @@
+/* Mirrors the local overrides in .claude/skills/pixel-ui/demo.html's <style> block. */
+.cols {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(300px, 28%) minmax(0, 1fr);
+  gap: 12px;
+}
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow: auto;
+}
+.stage-win {
+  min-height: 0;
+}
+.stage-win > .px-window__body {
+  flex: 1;
+  min-height: 0;
+}
+.stage {
+  flex: 1;
+  min-height: 240px;
+}
+.px-tab {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.slots {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.px-slot .item {
+  font-size: 32px;
+  line-height: 1;
+}
+.upload-drop {
+  height: 96px;
+}
+.upload-drop .px-well__empty {
+  font-size: 16px;
+}
+.thumbs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+.thumbs:empty {
+  display: none;
+}
+.thumbs .px-slot {
+  padding: 3px;
+}
+.thumbs img {
+  object-fit: cover;
+}
+@media (max-width: 860px) {
+  .cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
