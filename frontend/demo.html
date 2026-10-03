@@ -320,6 +320,14 @@
     count: document.getElementById('photo-count'),
     status: document.getElementById('status-msg')
   });
+
+  // Closet.exe: replace the placeholder items with the player's own detected garments.
+  FIP.loadCloset({
+    top: document.querySelector('#panel-tops .slots'),
+    bottom: document.querySelector('#panel-bottoms .slots'),
+    dress: document.querySelector('#panel-dresses .slots'),
+    accessory: document.querySelector('#panel-acc .slots')
+  }, { status: document.getElementById('status-msg') });
 </script>
 </body>
 </html>

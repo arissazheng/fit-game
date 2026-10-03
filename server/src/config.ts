@@ -1,9 +1,13 @@
-import 'dotenv/config'
+import { config as loadEnv } from 'dotenv'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const serverDir = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(serverDir, '..', '..')
+
+// npm workspaces run this with cwd = server/, not the repo root where .env
+// actually lives — dotenv/config's implicit process.cwd() lookup misses it.
+loadEnv({ path: path.join(repoRoot, '.env') })
 
 export const config = {
   port: Number(process.env.PORT ?? 4000),

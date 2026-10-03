@@ -11,13 +11,15 @@
   // /server). Only needed if FIP_API_BASE is set to point somewhere else.
   var API_BASE = typeof root.FIP_API_BASE === 'string' ? root.FIP_API_BASE : '';
 
-  // Best-effort: persist the original files server-side (POST /api/uploads),
-  // then pixelize each one at the avatar's own canvas size (frontend/avatar.js's
-  // 64x96 CANVAS, via the same shared pixelize() module the backend uses
-  // everywhere else) so the closet thumbnail becomes a real pixel-art version
-  // of the photo once it's ready. onPixelized(name, url) fires per photo;
-  // failures here don't block the UI — the shrunk localStorage copy (below)
-  // already carries a preview across pages regardless.
+  // Best-effort: persist the original files server-side (POST /api/uploads), then for each one:
+  //   - pixelize it at the avatar's own canvas size (frontend/avatar.js's 64x96 CANVAS, via the
+  //     same shared pixelize() module the backend uses everywhere else) so the closet thumbnail
+  //     becomes a real pixel-art version of the photo. onPixelized(name, url) fires per photo.
+  //   - extract the real garments in it (OpenAI vision; avatar.js draws any item by name already,
+  //     so no sprite image is needed — see API.md's Extraction section) and save them as closet
+  //     items. FIP.loadCloset (below) reads these back on the outfit-builder page.
+  // Failures here don't block the UI — the shrunk localStorage copy (below) already carries a
+  // preview across pages regardless.
   function syncAndPixelize(files, onPixelized) {
     var formData = new FormData();
     files.forEach(function (f) { formData.append('photos', f); });
@@ -36,6 +38,14 @@
             }); })
             .then(function (url) { onPixelized(name, API_BASE + url); })
             .catch(function (err) { console.warn('Could not pixelize ' + name + ':', err); });
+
+          fetch(API_BASE + '/api/photos/' + u.id + '/extract', { method: 'POST' })
+            .then(function (res) { return res.json().then(function (data) {
+              if (!res.ok) throw new Error(data && data.error || 'Extraction failed');
+              return data.items;
+            }); })
+            .then(function (items) { console.log('Found ' + items.length + ' item(s) in ' + name, items); })
+            .catch(function (err) { console.warn('Could not find clothes in ' + name + ':', err); });
         });
       })
       .catch(function (err) { console.warn('Could not sync photos to the server:', err); });
@@ -129,5 +139,54 @@
     });
 
     draw();
+  };
+
+  // Starter items so the closet is never empty before any photo is uploaded/extracted.
+  var DEFAULT_ITEMS = [
+    { slot: 'top', name: 'Pink shirt', source: 'default' },
+    { slot: 'bottom', name: 'Purple shorts', source: 'default' }
+  ];
+
+  // Icon for a closet button: render the player's own avatar wearing just this one item
+  // (frontend/avatar.js — same renderer, same colors/shapes the game uses everywhere else),
+  // not an emoji guess. look defaults to the player's current lobby look.
+  function renderItemIcon(it, look) {
+    var canvas = document.createElement('canvas');
+    canvas.className = 'px-img';
+    canvas.style.width = '26px';
+    canvas.style.height = '39px'; // matches FIPAvatar's 64x96 (2:3) aspect
+    var outfit = it.slot === 'accessory' ? { accessories: [it.name] } : {};
+    if (it.slot !== 'accessory') outfit[it.slot] = it.name;
+    root.FIPAvatar.render(canvas, look, outfit);
+    return canvas;
+  }
+
+  // Populate the closet tabs (Tops/Bottoms/Dresses/Acc) with the player's own detected items
+  // (plus a couple of starter defaults) instead of placeholder ones. panels = { top: el,
+  // bottom: el, dress: el, accessory: el } (each the .slots container inside that category's
+  // tabpanel). Clicking still works exactly as before — the outfit builder reads selection
+  // from the .px-slot's title attribute.
+  FIP.loadCloset = function (panels, opts) {
+    var status = opts && opts.status;
+    var look = (opts && opts.look) || FIP.store.getAvatar();
+    fetch(API_BASE + '/api/inventory')
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        var items = DEFAULT_ITEMS.concat(data.items || []);
+        Object.keys(panels).forEach(function (slot) {
+          var mine = items.filter(function (it) { return it.slot === slot; });
+          if (!mine.length) return;
+          panels[slot].innerHTML = '';
+          mine.forEach(function (it) {
+            var btn = document.createElement('button');
+            btn.className = 'px-slot'; btn.title = it.name; btn.setAttribute('aria-label', it.name);
+            btn.appendChild(renderItemIcon(it, look));
+            panels[slot].appendChild(btn);
+          });
+        });
+        var found = items.length - DEFAULT_ITEMS.length;
+        if (status && found > 0) status.textContent = found + ' item' + (found === 1 ? '' : 's') + ' from your closet';
+      })
+      .catch(function (err) { console.warn('Could not load your closet:', err); });
   };
 })(typeof window !== 'undefined' ? window : globalThis);

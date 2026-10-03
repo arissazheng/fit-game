@@ -70,25 +70,56 @@ swaps the closet thumbnail over to the pixelized result once it's ready.
 
 ---
 
+## Extraction
+
+`/frontend/avatar.js`'s renderer colors/shapes garments by keyword match on a
+plain name string (`"Denim jacket"` → blue jacket shape) — it has no concept
+of an image sprite. So extraction only needs to *describe* each garment, not
+isolate/generate an image of it.
+
+### `POST /api/photos/:photoId/extract`
+
+Runs OpenAI vision (`OPENAI_VISION_MODEL`, structured JSON output) over the
+photo, detects each distinct garment/accessory (name + slot), and saves them
+as real closet items. Set `USE_MOCK_EXTRACTION=true` to get canned fake
+garments instead (no API calls, no cost) — useful for frontend work without
+burning OpenAI credits.
+
+Response `200`:
+```json
+{ "items": [{ "id": "...", "slot": "top", "name": "red striped crop top" }] }
+```
+
+Response `404` / `500`: friendly, player-facing `{ "error": "..." }`.
+
+### `GET /api/inventory`
+
+All detected items for the (current fixed dev) user, oldest first.
+
+Response `200`:
+```json
+{ "items": [{ "id": "...", "slot": "bottom", "name": "black skinny jeans", "source": "closet" }] }
+```
+
+---
+
 ## Avatar
 
 The live prototype's avatar (`/frontend/avatar.js`) is a
 procedural chibi renderer driven by a `Look` (skin/hair/hairstyle, picked in
 the lobby) and an `Outfit` (`top`/`bottom`/`dress`/`accessories`, as free-text
-item names — colored by keyword match "until real extracted sprites replace
-them"). `shared/src/avatarSpec.ts` mirrors its constants (`SKIN_TONES`,
-`HAIR_COLORS`, `HAIRSTYLES`, `CANVAS`) and the dress/top/bottom exclusivity
-rule (`applyEquip`) for any backend code that needs them. There's no
-sprite-compositing endpoint — the avatar itself has no server-side
-representation yet. That arrives with step 5/6 (real extracted garment
-sprites) and step 7 (persisted user avatars).
+item names — colored by keyword match). `shared/src/avatarSpec.ts` mirrors
+its constants (`SKIN_TONES`, `HAIR_COLORS`, `HAIRSTYLES`, `CANVAS`) and the
+dress/top/bottom exclusivity rule (`applyEquip`) for any backend code that
+needs them.
 
 Photos uploaded via `/api/uploads` are already wired into
 `game.js`'s `FIP.mountUpload` (alongside its existing localStorage
 persistence) so they survive beyond one browser, and immediately pixelized
-per above.
+(`/api/photos/:id/pixelize`, above) and extracted into real closet items
+(`/api/photos/:id/extract`, above).
 
 ---
 
-More endpoints are added here as each build step lands (extraction jobs,
-inventory, wallet, marketplace, outfit scoring).
+More endpoints are added here as each build step lands (inventory wired into
+the closet UI, wallet, marketplace, outfit scoring).

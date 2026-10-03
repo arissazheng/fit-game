@@ -15,3 +15,18 @@ db.exec(`
     created_at TEXT NOT NULL
   )
 `)
+
+// Detected garments: just enough for avatar.js to render them by name
+// (FIPAvatar.render colors/shapes items by keyword match on `name`, not by
+// image — see frontend/avatar.js). No sprite image involved.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS items (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    photo_id TEXT NOT NULL,
+    slot TEXT NOT NULL,
+    name TEXT NOT NULL,
+    source TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  )
+`)
