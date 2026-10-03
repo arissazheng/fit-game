@@ -8,6 +8,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="pixel-ui.css">
+<script>
+  // The runway only opens when the outfit builder's timer ends; otherwise go back to the lobby.
+  (function () {
+    var ready = null;
+    try { ready = sessionStorage.getItem('fip.runwayReady'); sessionStorage.removeItem('fip.runwayReady'); } catch (e) {}
+    if (!ready) location.replace('index.html');
+  })();
+</script>
 <style>
   .stage { flex: 1; min-height: 240px; }
   .look { text-align: center; color: var(--light); display: flex; flex-direction: column; gap: 8px; font-size: 20px; }

@@ -278,6 +278,7 @@
       saveOutfit();
       locked = true;
       document.getElementById('status-msg').textContent = "Time's up! Outfit saved. Heading to the runway...";
+      try { sessionStorage.setItem('fip.runwayReady', String(Date.now())); } catch (e) { /* storage blocked */ }
       setTimeout(function () { location.href = 'runway.html'; }, 1500);
     }
   }
