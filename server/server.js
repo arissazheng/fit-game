@@ -21,6 +21,7 @@
 //     { type: 'room', players: [{ id, name, look, ready, isHost, connected }], phase }
 //     { type: 'start', round: { theme, category, endsAt, seconds } }
 //     { type: 'outfits', round, outfits: [{ id, name, look, outfit }] }
+//     { type: 'runway' }                                 everyone locked in: go to the runway now
 //     { type: 'error', message }
 
 const http = require('http');
@@ -117,9 +118,19 @@ function pickTheme(room) {
   return pick;
 }
 
+// Once every connected player has locked in, end the round early and send everyone to the runway.
+function checkAllLockedIn(room) {
+  if (room.phase !== 'building' || !room.round || room.round.endedEarly) return;
+  const connected = [...room.players.values()].filter((p) => p.connected);
+  if (connected.length === 0 || !connected.every((p) => room.outfits.has(p.id))) return;
+  room.round.endedEarly = true;
+  room.round.endsAt = Math.min(room.round.endsAt, Date.now());
+  broadcast(room, { type: 'runway' });
+}
+
 // Back to the lobby once the round is over and someone returns to the lobby page.
 function resetIfRoundOver(room) {
-  if (room.phase === 'building' && room.round && Date.now() > room.round.endsAt + 3000) {
+  if (room.phase === 'building' && room.round && (room.round.endedEarly || Date.now() > room.round.endsAt + 3000)) {
     room.phase = 'lobby';
     for (const p of room.players.values()) p.ready = false;
   }
@@ -178,6 +189,7 @@ wss.on('connection', (socket) => {
     if (msg.type === 'hello') {
       if (!attach(msg.room, msg.id)) return;
       if (room.phase === 'building' && room.round) send(socket, { type: 'start', round: room.round });
+      if (room.round && room.round.endedEarly) send(socket, { type: 'runway' });
       broadcastRoom(room);
       return;
     }
@@ -193,6 +205,7 @@ wss.on('connection', (socket) => {
     }
 
     if (msg.type === 'start') {
+      resetIfRoundOver(room);
       const host = hostOf(room);
       const connected = [...room.players.values()].filter((p) => p.connected);
       if (room.phase !== 'lobby') return send(socket, { type: 'error', message: 'The round already started.' });
@@ -217,6 +230,7 @@ wss.on('connection', (socket) => {
         }
       });
       broadcast(room, outfitsMsg(room));
+      checkAllLockedIn(room);
     }
 
     if (msg.type === 'getOutfits') send(socket, outfitsMsg(room));
@@ -229,7 +243,7 @@ wss.on('connection', (socket) => {
     const r = room, p = player;
     p.dropTimer = setTimeout(() => {
       r.players.delete(p.id);
-      if (r.players.size === 0) rooms.delete(r.id); else broadcastRoom(r);
+      if (r.players.size === 0) rooms.delete(r.id); else { broadcastRoom(r); checkAllLockedIn(r); }
     }, DISCONNECT_GRACE_MS);
     broadcastRoom(r);
   });

@@ -198,11 +198,32 @@
   var round = startRound();
 
   // Connection to the game server (if this page is served by it). Outfits are sent on lock-in and at 0:00.
+  // When everyone has locked in, the server ends the round early and sends everyone to the runway.
+  var playerCount = 1, lockedCount = 0;
   var game = FIP.connectGame({
     onStart: function (r) {      // the server's round wins if this page somehow missed it
       if (!lobbyRound) { lobbyRound = r; round = startRound(); endsAt = r.endsAt; ROUND_SECONDS = r.seconds; }
-    }
+    },
+    onRoom: function (m) { playerCount = m.players.filter(function (p) { return p.connected; }).length; showLockCount(); },
+    onOutfits: function (m) { lockedCount = m.outfits.length; showLockCount(); },
+    onRunway: function () { goToRunway('Everyone locked in! Heading to the runway...'); }
   });
+  function showLockCount() {
+    if (lockedCount > 0 && !leaving) document.getElementById('status-msg').textContent =
+      lockedCount + ' / ' + playerCount + ' locked in' + (locked ? ' · waiting for the others' : '');
+  }
+
+  var leaving = false;
+  function goToRunway(message) {
+    if (leaving) return;
+    leaving = true;
+    clearInterval(timer);
+    if (!locked) saveOutfit();
+    locked = true;
+    document.getElementById('status-msg').textContent = message;
+    try { sessionStorage.setItem('fip.runwayReady', String(Date.now())); } catch (e) { /* storage blocked */ }
+    setTimeout(function () { location.href = FIP.withRoom('runway.html'); }, 1200);
+  }
 
   // ---------- Closet: pick items ----------
   // One item per category (Acc allows several). A dress replaces top + bottom, and vice versa.
@@ -250,8 +271,10 @@
     saveOutfit();
     locked = true;
     this.disabled = true;
-    this.textContent = 'Outfit locked in. Waiting for the timer';
-    document.getElementById('status-msg').textContent = 'Outfit saved';
+    this.textContent = 'Outfit locked in';
+    // Without a game server you're the only player, so locking in ends the round right away.
+    if (!game.online) { goToRunway('Outfit locked in! Heading to the runway...'); return; }
+    document.getElementById('status-msg').textContent = 'Outfit locked in · waiting for the others';
   });
 
   // ---------- Avatar ----------
@@ -284,14 +307,7 @@
     text.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
     bar.style.setProperty('--value', left / ROUND_SECONDS);
     bar.classList.toggle('is-danger', left <= 10);
-    if (left === 0) {
-      clearInterval(timer);
-      saveOutfit();
-      locked = true;
-      document.getElementById('status-msg').textContent = "Time's up! Outfit saved. Heading to the runway...";
-      try { sessionStorage.setItem('fip.runwayReady', String(Date.now())); } catch (e) { /* storage blocked */ }
-      setTimeout(function () { location.href = FIP.withRoom('runway.html'); }, 1500);
-    }
+    if (left === 0) goToRunway("Time's up! Outfit saved. Heading to the runway...");
   }
   var timer = setInterval(tick, 250);
   tick();

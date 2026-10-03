@@ -9,7 +9,7 @@
 //   var room = FIP.joinRoom({ me: { name, look, ready }, onChange: fn(players), onStart: fn(round), onError: fn(msg) });
 //   room.update({ ready: true });   room.start({ seconds: 60 });   room.players();   room.mode  // 'server' | 'local'
 // Outfit builder / runway:
-//   var game = FIP.connectGame({ onStart: fn(round), onOutfits: fn(msg) });   game.send({ type: 'outfit', outfit })
+//   var game = FIP.connectGame({ onStart: fn(round), onOutfits: fn(msg), onRunway: fn(), onRoom: fn(msg) });   game.send({ type: 'outfit', outfit })
 (function (root) {
   var FIP = root.FIP = root.FIP || {};
   FIP.MAX_PLAYERS = 8;
@@ -159,6 +159,7 @@
         if (m.type === 'welcome') ss.set('fip.playerId', m.id);
         if (m.type === 'start' && handlers.onStart) handlers.onStart(m.round);
         if (m.type === 'outfits' && handlers.onOutfits) handlers.onOutfits(m);
+        if (m.type === 'runway' && handlers.onRunway) handlers.onRunway();
         if (m.type === 'room' && handlers.onRoom) handlers.onRoom(m);
       },
       onFail: function () { api.online = false; if (handlers.onOffline) handlers.onOffline(); }
