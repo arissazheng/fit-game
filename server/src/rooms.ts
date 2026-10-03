@@ -32,7 +32,7 @@ import path from 'node:path'
 import { WebSocketServer, type WebSocket } from 'ws'
 import { config } from './config.ts'
 
-const MAX_PLAYERS = 8
+const MAX_PLAYERS = 3
 const DISCONNECT_GRACE_MS = 20000 // keep a player while their browser moves between pages
 const ROOM_IDLE_MS = 30 * 60 * 1000
 const RUNWAY_INTRO_MS = 3000 // time for everyone's browser to load the runway
@@ -292,7 +292,7 @@ export function attachRooms(httpServer: Server) {
       player = (id && room.players.get(id)) || null
       if (!player) {
         if (room.players.size >= MAX_PLAYERS) {
-          send(socket, { type: 'error', message: 'This room is full (8 players).' })
+          send(socket, { type: 'error', message: 'This room is full (3 players).' })
           return false
         }
         player = { id: randomBytes(6).toString('hex'), name: '', look: {}, ready: false, joinedAt: Date.now(), socket: null, connected: false }

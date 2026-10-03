@@ -13,7 +13,7 @@
 //   game.send({ type: 'vote', modelId, stars: 4 })   game.send({ type: 'outfit', outfit })
 (function (root) {
   var FIP = root.FIP = root.FIP || {};
-  FIP.MAX_PLAYERS = 8;
+  FIP.MAX_PLAYERS = 3;
   var ss = {
     get: function (k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
     set: function (k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
