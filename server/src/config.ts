@@ -12,6 +12,7 @@ export const config = {
   openaiVisionModel: process.env.OPENAI_VISION_MODEL ?? 'gpt-5',
   openaiImageModel: process.env.OPENAI_IMAGE_MODEL ?? 'gpt-image-1',
   useMockExtraction: process.env.USE_MOCK_EXTRACTION === 'true',
+  frontendDir: path.join(repoRoot, 'frontend'),
   dataDir: path.join(repoRoot, 'data'),
   uploadsDir: path.join(repoRoot, 'data', 'uploads'),
   processedDir: path.join(repoRoot, 'data', 'processed'),

@@ -1,9 +1,10 @@
----
-name: pixel-ui
-description: Retro desktop (Windows 95/98-style) pixel UI for Fashion in Pixels (fit-game). Use whenever building or editing any frontend screen, component, or style in this repo — login, lobby, dressing room, runway, voting, podium, marketplace — or when choosing fonts, colors, borders, buttons, backgrounds, layout, or animations. Based on the UI chrome of pixel-converter.ameniwa.com, not its anime artwork.
----
+# Fit Game — frontend
 
-# Pixel UI: retro desktop
+Retro desktop (Windows 95/98-style) pixel UI. `index.html` is the lobby,
+`demo.html` the outfit builder, `runway.html` the fashion show. Served by the
+backend (`/server`) at `http://localhost:4000` — see the root `README.md`.
+
+## Pixel UI: retro desktop
 
 The whole game looks like an old desktop computer: teal background, silver
 beveled windows with navy-to-blue gradient title bars, chunky 3D buttons, sunken
@@ -75,7 +76,7 @@ new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
 
 ## Mapping game screens to the desktop
 
-- **Login:** teal desktop with a small centered window `Fashion in Pixels v1.0`. Inside: a `.px-label` EMAIL, a `.px-input`, and an `OK` / `Log in` `.px-btn`. Taskbar shows `Start` + clock.
+- **Login:** teal desktop with a small centered window `Fit Game v1.0`. Inside: a `.px-label` EMAIL, a `.px-input`, and an `OK` / `Log in` `.px-btn`. Taskbar shows `Start` + clock.
 - **Lobby (`index.html`, the first page):** left column `Avatar.exe` (name, skin tone swatches, hair color swatches, hairstyle buttons, Shuffle) and `Upload.exe` (up to 10 outfit photos). Right: `Lobby.exe` well showing your avatar on the runway floor with a name tag, a players row, and `▶ START GAME`. In the lobby everyone wears the plain outfit (black tank + shorts, no accessories). Start sends all players to the outfit builder.
 - **Avatars:** one shared chibi body for everyone, drawn by `avatar.js` on a 64×96 canvas (big head, closed happy eyes, blush, 1px outline in a darker shade of each color). Only skin tone, hair color, and hairstyle vary. Always render through `FIPAvatar.render()` and scale with `FIPAvatar.fit()` (whole numbers only). `game.js` keeps the look and photos between pages.
 - **Upload closet:** mirror the reference layout. Left `Upload.exe` window with options, right `Preview` well with "Drag & Drop or Click", `.px-progress` while extracting, status bar `3 / 10 photos · 12 items found`.

@@ -11,9 +11,8 @@ const app = express()
 
 app.use(express.json())
 
-// The live prototype (.claude/skills/pixel-ui/*.html) is plain static HTML,
-// opened from whatever origin/port happens to be serving it (or none, via
-// file://) — reflect the request's origin rather than pinning one.
+// Frontend and API are same-origin (both served from here), so this is only
+// needed for the rare case something still hits the API from elsewhere.
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', req.headers.origin ?? '*')
   res.header('Access-Control-Allow-Credentials', 'true')
@@ -30,6 +29,10 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/uploads', uploadsRouter)
 
+// The game itself — /frontend's index.html, demo.html, runway.html — served
+// straight off disk. express.static serves index.html for "/" automatically.
+app.use(express.static(config.frontendDir))
+
 app.listen(config.port, () => {
-  console.log(`fit-game server listening on http://localhost:${config.port}`)
+  console.log(`Fit Game running at http://localhost:${config.port}`)
 })

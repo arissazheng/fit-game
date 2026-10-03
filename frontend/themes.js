@@ -1,4 +1,4 @@
-// Fashion in Pixels — dress-up themes.
+// Fit Game — dress-up themes.
 // A round runs from "Start" to the podium (winners announced). Pick ONE theme when a round starts
 // and keep it until the podium; the next round picks a new one.
 // Multiplayer: the host/server should pick the theme and broadcast it so every player sees the same one.

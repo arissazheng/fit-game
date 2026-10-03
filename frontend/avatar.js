@@ -1,4 +1,4 @@
-// Fashion in Pixels — chibi pixel avatar renderer.
+// Fit Game — chibi pixel avatar renderer.
 //
 // Every avatar shares one body shape on a 64x96 canvas (big head, small body, closed happy eyes,
 // blush, dark pixel outline). Players customize skin tone, hair color, and hairstyle.

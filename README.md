@@ -1,17 +1,17 @@
-# fit-game — Fashion in Pixels
+# Fit Game
 
 ```
 npm install
 npm run dev
 ```
 
-That starts three things together:
+Open **http://localhost:4000** — that's the whole game. The backend (`/server`)
+serves the frontend (`/frontend` — lobby, outfit builder, runway) directly
+and exposes the API at `/api/*` on the same origin. See `API.md`.
 
-| URL | What it is |
-|---|---|
-| **http://localhost:8080** | **The actual game.** Static HTML/CSS/JS under `.claude/skills/pixel-ui/` — lobby (`index.html`), outfit builder (`demo.html`), runway (`runway.html`). Open this. |
-| http://localhost:4000 | The backend API (`/server`). See `API.md`. |
-| http://localhost:5173 | Internal dev/test tooling only (`/client`) — e.g. `#/dev/pixelize`. Not the game. |
+`npm run dev:tools` (port 5173) is separate, internal dev/test tooling only
+(`/client` — e.g. `#/dev/pixelize`), not part of the game.
 
-`/shared` holds the avatar spec (`avatarSpec.ts`, mirroring `.claude/skills/pixel-ui/avatar.js`'s
-constants) and the isomorphic `pixelize()` module both the backend and the dev tooling use.
+`/shared` holds the avatar spec (`avatarSpec.ts`, mirroring
+`/frontend/avatar.js`'s constants) and the isomorphic `pixelize()` module
+both the backend and the dev tooling use.

@@ -1,7 +1,7 @@
 import type { LayerKey, Look, Outfit, Slot } from './types'
 
 /**
- * Canonical values mirrored from .claude/skills/pixel-ui/avatar.js, which is
+ * Canonical values mirrored from frontend/avatar.js, which is
  * the actual renderer the live prototype uses. Keep these in sync with that
  * file by hand — it's plain browser JS (an IIFE attaching window.FIPAvatar),
  * not something this Node/TS package can import directly.

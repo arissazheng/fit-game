@@ -1,6 +1,6 @@
 /**
  * Mirrors the data model actually used by the live prototype
- * (.claude/skills/pixel-ui/avatar.js + game.js), not an independently
+ * (frontend/avatar.js + game.js), not an independently
  * designed spec — garments are free-text names (avatar.js colors them by
  * keyword match "until real extracted sprites replace them"), and the
  * avatar itself is a procedurally-drawn chibi, not a sprite stack.

@@ -1,9 +1,10 @@
 # API
 
-Base URL in dev: `http://localhost:4000`. CORS reflects the request's
-`Origin` (with credentials) rather than pinning one, since the live
-prototype (`.claude/skills/pixel-ui/*.html`) is static HTML that can be
-opened from any origin, including `file://`.
+Base URL in dev: `http://localhost:4000` — the backend serves the frontend
+(`/frontend`) directly from the same origin, so API calls from the game are
+same-origin fetches to relative paths (`/api/...`). CORS still reflects the
+request's `Origin` (with credentials) as a fallback for anything hitting the
+API from elsewhere.
 
 Static sprite files are served under `/assets/...` (see each section for the
 exact prefix).
@@ -48,7 +49,7 @@ Response `400` (friendly, player-facing):
 
 ## Avatar
 
-The live prototype's avatar (`.claude/skills/pixel-ui/avatar.js`) is a
+The live prototype's avatar (`/frontend/avatar.js`) is a
 procedural chibi renderer driven by a `Look` (skin/hair/hairstyle, picked in
 the lobby) and an `Outfit` (`top`/`bottom`/`dress`/`accessories`, as free-text
 item names — colored by keyword match "until real extracted sprites replace

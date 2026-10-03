@@ -1,4 +1,4 @@
-// Fashion in Pixels — shared game state for the prototype pages (lobby, outfit builder, runway).
+// Fit Game — shared game state for the prototype pages (lobby, outfit builder, runway).
 // Stores the player's avatar look and uploaded photos in this browser's localStorage so they carry
 // from the lobby into the outfit builder. Photos are also synced to the backend (POST
 // /api/uploads, see fit-game/API.md) so they survive beyond this browser; look/outfit stay
@@ -7,7 +7,9 @@
   var FIP = root.FIP = root.FIP || {};
   var KEYS = { avatar: 'fip.avatar', photos: 'fip.photos' };
   var MAX_PHOTOS = 10;
-  var API_BASE = root.FIP_API_BASE || 'http://localhost:4000';
+  // Same-origin by default — the backend serves this frontend directly (see
+  // /server). Only needed if FIP_API_BASE is set to point somewhere else.
+  var API_BASE = typeof root.FIP_API_BASE === 'string' ? root.FIP_API_BASE : '';
 
   // Best-effort: persist the original files server-side too (POST /api/uploads),
   // alongside the localStorage copy below. Failures here don't block the UI —
