@@ -1,0 +1,20 @@
+# Render deploy settings (render.com > New > Blueprint > pick this repo).
+# Runs the whole game (pages + multiplayer WebSockets + API) as one always-on Node server.
+# Vercel can't host this: it only runs short-lived functions, with no persistent WebSockets or SQLite.
+services:
+  - type: web
+    name: fit-game
+    runtime: node
+    plan: free
+    branch: claude/nifty-brahmagupta-tjaiic
+    buildCommand: npm install --include=dev
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: SESSION_SECRET
+        generateValue: true
+      # No OpenAI key yet: use canned garments for photo extraction.
+      - key: USE_MOCK_EXTRACTION
+        value: "true"
