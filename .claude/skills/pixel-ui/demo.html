@@ -9,22 +9,35 @@
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="pixel-ui.css">
 <script src="pixel-ui.js" defer></script>
+<script>
+  // The game always starts in the lobby. This page only opens through the lobby's Start button;
+  // opening or refreshing it directly sends you back to the lobby.
+  (function () {
+    var started = null;
+    try { started = sessionStorage.getItem('fip.roundStarted'); sessionStorage.removeItem('fip.roundStarted'); } catch (e) {}
+    if (!started) location.replace('index.html' + location.search);
+  })();
+</script>
 <script src="themes.js"></script>
+<script src="avatar.js"></script>
+<script src="game.js"></script>
 <style>
   .cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(300px, 28%) minmax(0, 1fr); gap: 12px; }
   .left { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: auto; }
   .stage-win { min-height: 0; }
   .stage-win > .px-window__body { flex: 1; min-height: 0; }
-  .stage { flex: 1; min-height: 240px; }
+  .stage { flex: 1; min-height: 240px; overflow: hidden; }
+  #avatar { display: block; }
+  .avatar-caption { position: absolute; left: 0; right: 0; bottom: 12px; text-align: center; color: var(--shadow); font-size: 15px; letter-spacing: 0.06em; }
   .px-tab { padding-left: 10px; padding-right: 10px; }
+  .closet-win { flex: 1 1 0; min-height: 360px; }
+  .closet-win > .px-window__body { flex: 1; min-height: 0; }
+  .closet-tabs { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .closet-tabs .px-tabpanel { flex: 1; min-height: 0; }
   .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .px-slot .item { font-size: 32px; line-height: 1; } /* placeholder sprites until real pixel items exist */
   .upload-drop { height: 96px; }
   .upload-drop .px-well__empty { font-size: 16px; }
-  .thumbs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
-  .thumbs:empty { display: none; }
-  .thumbs .px-slot { padding: 3px; }
-  .thumbs img { object-fit: cover; }
   @media (max-width: 860px) {
     .cols { grid-template-columns: minmax(0, 1fr); }
   }
@@ -47,45 +60,84 @@
 
       <div class="px-window__body cols">
         <div class="left">
-          <div class="px-window">
+          <div class="px-window closet-win">
             <div class="px-titlebar"><span>Closet.exe</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
             <div class="px-window__body">
-              <div>
+              <div class="closet-tabs">
                 <div class="px-tabs" role="tablist" aria-label="Closet categories">
                   <button class="px-tab" role="tab" id="tab-tops" aria-controls="panel-tops" aria-selected="true">Tops</button>
                   <button class="px-tab" role="tab" id="tab-bottoms" aria-controls="panel-bottoms">Bottoms</button>
                   <button class="px-tab" role="tab" id="tab-dresses" aria-controls="panel-dresses">Dresses</button>
                   <button class="px-tab" role="tab" id="tab-acc" aria-controls="panel-acc">Acc</button>
                 </div>
-                <div class="px-tabpanel" role="tabpanel" id="panel-tops" aria-labelledby="tab-tops">
+                <div class="px-tabpanel px-scroll px-scroll--always" role="tabpanel" id="panel-tops" aria-labelledby="tab-tops">
                   <div class="slots">
                     <button class="px-slot" title="White tee" aria-label="White tee"><span class="item">👕</span></button>
-                    <button class="px-slot" title="Pink blouse" aria-label="Pink blouse" aria-selected="true"><span class="item">👚</span></button>
+                    <button class="px-slot" title="Pink blouse" aria-label="Pink blouse"><span class="item">👚</span></button>
                     <button class="px-slot" title="Denim jacket" aria-label="Denim jacket"><span class="item">🧥</span></button>
                     <button class="px-slot" title="Black tank top" aria-label="Black tank top"><span class="item">🎽</span></button>
+                    <button class="px-slot" title="Striped button-up" aria-label="Striped button-up"><span class="item">👔</span></button>
+                    <button class="px-slot" title="Linen overshirt" aria-label="Linen overshirt"><span class="item">🥼</span></button>
+                    <button class="px-slot" title="Gray baby tee" aria-label="Gray baby tee"><span class="item">👕</span></button>
+                    <button class="px-slot" title="Lilac cardigan" aria-label="Lilac cardigan"><span class="item">👚</span></button>
+                    <button class="px-slot" title="Puffer jacket" aria-label="Puffer jacket"><span class="item">🧥</span></button>
+                    <button class="px-slot" title="Racerback tank" aria-label="Racerback tank"><span class="item">🎽</span></button>
+                    <button class="px-slot" title="Plaid flannel" aria-label="Plaid flannel"><span class="item">👔</span></button>
+                    <button class="px-slot" title="Band tee" aria-label="Band tee"><span class="item">👕</span></button>
+                    <button class="px-slot" title="Lace cami" aria-label="Lace cami"><span class="item">👚</span></button>
+                    <button class="px-slot" title="Leather jacket" aria-label="Leather jacket"><span class="item">🧥</span></button>
+                    <button class="px-slot" title="Navy polo" aria-label="Navy polo"><span class="item">👕</span></button>
+                    <button class="px-slot" title="Ruffle top" aria-label="Ruffle top"><span class="item">👚</span></button>
+                    <button class="px-slot" title="White blazer" aria-label="White blazer"><span class="item">🥼</span></button>
+                    <button class="px-slot" title="Sports tank" aria-label="Sports tank"><span class="item">🎽</span></button>
+                    <button class="px-slot" title="Oxford shirt" aria-label="Oxford shirt"><span class="item">👔</span></button>
+                    <button class="px-slot" title="Oversized hoodie" aria-label="Oversized hoodie"><span class="item">👕</span></button>
+                    <button class="px-slot" title="Corset top" aria-label="Corset top"><span class="item">👚</span></button>
+                    <button class="px-slot" title="Trench coat" aria-label="Trench coat"><span class="item">🧥</span></button>
+                    <button class="px-slot" title="Ringer tee" aria-label="Ringer tee"><span class="item">👕</span></button>
+                    <button class="px-slot" title="Halter top" aria-label="Halter top"><span class="item">👚</span></button>
                   </div>
                 </div>
-                <div class="px-tabpanel" role="tabpanel" id="panel-bottoms" aria-labelledby="tab-bottoms" hidden>
+                <div class="px-tabpanel px-scroll px-scroll--always" role="tabpanel" id="panel-bottoms" aria-labelledby="tab-bottoms" hidden>
                   <div class="slots">
                     <button class="px-slot" title="Baggy jeans" aria-label="Baggy jeans"><span class="item">👖</span></button>
                     <button class="px-slot" title="Black shorts" aria-label="Black shorts"><span class="item">🩳</span></button>
-                    
+                    <button class="px-slot" title="Flared jeans" aria-label="Flared jeans"><span class="item">👖</span></button>
+                    <button class="px-slot" title="Denim cutoffs" aria-label="Denim cutoffs"><span class="item">🩳</span></button>
+                    <button class="px-slot" title="Cargo pants" aria-label="Cargo pants"><span class="item">👖</span></button>
+                    <button class="px-slot" title="Bike shorts" aria-label="Bike shorts"><span class="item">🩳</span></button>
+                    <button class="px-slot" title="Black trousers" aria-label="Black trousers"><span class="item">👖</span></button>
+                    <button class="px-slot" title="Linen shorts" aria-label="Linen shorts"><span class="item">🩳</span></button>
+                    <button class="px-slot" title="Track pants" aria-label="Track pants"><span class="item">👖</span></button>
+                    <button class="px-slot" title="Pleated skort" aria-label="Pleated skort"><span class="item">🩳</span></button>
                   </div>
                 </div>
-                <div class="px-tabpanel" role="tabpanel" id="panel-dresses" aria-labelledby="tab-dresses" hidden>
+                <div class="px-tabpanel px-scroll px-scroll--always" role="tabpanel" id="panel-dresses" aria-labelledby="tab-dresses" hidden>
                   <div class="slots">
                     <button class="px-slot" title="Slip dress" aria-label="Slip dress"><span class="item">👗</span></button>
                     <button class="px-slot" title="Kimono dress" aria-label="Kimono dress"><span class="item">👘</span></button>
                     <button class="px-slot" title="Sari" aria-label="Sari"><span class="item">🥻</span></button>
+                    <button class="px-slot" title="Sundress" aria-label="Sundress"><span class="item">👗</span></button>
+                    <button class="px-slot" title="Little black dress" aria-label="Little black dress"><span class="item">👗</span></button>
+                    <button class="px-slot" title="Wrap dress" aria-label="Wrap dress"><span class="item">👘</span></button>
+                    <button class="px-slot" title="Maxi dress" aria-label="Maxi dress"><span class="item">👗</span></button>
+                    <button class="px-slot" title="Silk gown" aria-label="Silk gown"><span class="item">🥻</span></button>
                   </div>
                 </div>
-                <div class="px-tabpanel" role="tabpanel" id="panel-acc" aria-labelledby="tab-acc" hidden>
+                <div class="px-tabpanel px-scroll px-scroll--always" role="tabpanel" id="panel-acc" aria-labelledby="tab-acc" hidden>
                   <div class="slots">
                     <button class="px-slot" title="Shoulder bag" aria-label="Shoulder bag"><span class="item">👜</span></button>
                     <button class="px-slot" title="Sunglasses" aria-label="Sunglasses"><span class="item">🕶️</span></button>
                     <button class="px-slot" title="Cap" aria-label="Cap"><span class="item">🧢</span></button>
                     <button class="px-slot" title="Ring" aria-label="Ring"><span class="item">💍</span></button>
                     <button class="px-slot" title="Hair bow" aria-label="Hair bow"><span class="item">🎀</span></button>
+                    <button class="px-slot" title="Sun hat" aria-label="Sun hat"><span class="item">👒</span></button>
+                    <button class="px-slot" title="Scarf" aria-label="Scarf"><span class="item">🧣</span></button>
+                    <button class="px-slot" title="Watch" aria-label="Watch"><span class="item">⌚</span></button>
+                    <button class="px-slot" title="Mini backpack" aria-label="Mini backpack"><span class="item">🎒</span></button>
+                    <button class="px-slot" title="Reading glasses" aria-label="Reading glasses"><span class="item">👓</span></button>
+                    <button class="px-slot" title="Beaded necklace" aria-label="Beaded necklace"><span class="item">📿</span></button>
+                    <button class="px-slot" title="Coin purse" aria-label="Coin purse"><span class="item">👛</span></button>
                   </div>
                 </div>
               </div>
@@ -108,17 +160,17 @@
         <div class="px-window stage-win">
           <div class="px-titlebar"><span id="theme-title">THEME: Y2K Pop Star</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
           <div class="px-window__body">
-            <div class="px-progress" style="--value:.65"><i></i></div>
-            <div class="px-well px-dropzone stage" id="upload-zone" aria-label="Upload outfit photos">
-              <input type="file" id="upload-input" accept="image/*" multiple>
-              <div class="px-well__empty">🖼<br>Drag &amp; Drop<br>or Click</div>
+            <div class="px-progress" id="timer-bar" style="--value:1"><i></i></div>
+            <div class="px-well stage" id="avatar-stage">
+              <canvas id="avatar" class="px-img" width="64" height="96" role="img" aria-label="Your avatar"></canvas>
+              <div class="avatar-caption" id="avatar-caption">Default fit</div>
             </div>
-            <button class="px-btn px-btn--wide">↓ Lock in outfit</button>
+            <button class="px-btn px-btn--wide" id="lock-btn">↓ Lock in outfit</button>
           </div>
         </div>
       </div>
 
-      <div class="px-statusbar"><span id="status-msg">Ready</span><span>0:39</span><span>120 coins</span></div>
+      <div class="px-statusbar"><span id="status-msg">Ready</span><span id="timer-text">1:00</span><span>120 coins</span></div>
     </div>
 
 </div>
@@ -130,8 +182,8 @@
   <span class="px-taskbar__tray">🔈 17:13</span>
 </div>
 <script>
-  // A round lasts from Start to the podium. Pick one random theme per round.
-  // In the demo, loading the page starts a round (refresh = new round).
+  // A round lasts from Start (in the lobby, index.html) to the podium. Pick one random theme per round.
+  // In this prototype, arriving on this page starts a round.
   // In the real game, the host calls startRound() on Start and broadcasts the theme to every player.
   function startRound() {
     var t = FIP.pickTheme();
@@ -139,34 +191,107 @@
     document.title = t.theme + ' · Fashion in Pixels';
     return t;
   }
-  startRound();
+  var round = startRound();
 
-  document.getElementById('upload-zone').addEventListener('px-files', function (e) {
-    var n = e.detail.files.length;
-    document.getElementById('status-msg').textContent = n + (n === 1 ? ' photo' : ' photos') + ' imported: ' + e.detail.files[0].name;
+  // ---------- Closet: pick items ----------
+  // One item per category (Acc allows several). A dress replaces top + bottom, and vice versa.
+  var locked = false;
+  document.querySelector('.closet-tabs').addEventListener('click', function (e) {
+    var slot = e.target.closest('.px-slot');
+    if (!slot || locked) return;
+    var panel = slot.closest('[role="tabpanel"]');
+    var on = slot.getAttribute('aria-selected') !== 'true';
+    if (panel.id !== 'panel-acc') {
+      panel.querySelectorAll('.px-slot').forEach(function (s) { s.setAttribute('aria-selected', 'false'); });
+      var clear = panel.id === 'panel-dresses' ? ['panel-tops', 'panel-bottoms']
+                : (panel.id === 'panel-tops' || panel.id === 'panel-bottoms') ? ['panel-dresses'] : [];
+      if (on) clear.forEach(function (id) {
+        document.querySelectorAll('#' + id + ' .px-slot').forEach(function (s) { s.setAttribute('aria-selected', 'false'); });
+      });
+    }
+    slot.setAttribute('aria-selected', on ? 'true' : 'false');
+    drawAvatar();
   });
 
-  // Upload.exe: keep up to 10 photos and show them as thumbnails
-  var photos = [];
-  document.getElementById('photo-zone').addEventListener('px-files', function (e) {
-    var room = 10 - photos.length;
-    var added = e.detail.files.slice(0, room);
-    added.forEach(function (file) {
-      photos.push(file);
-      var slot = document.createElement('div');
-      slot.className = 'px-slot';
-      slot.title = file.name;
-      var img = document.createElement('img');
-      img.src = URL.createObjectURL(file);
-      img.alt = file.name;
-      slot.appendChild(img);
-      document.getElementById('photo-thumbs').appendChild(slot);
-    });
-    document.getElementById('photo-count').textContent = photos.length + ' / 10';
-    var skipped = e.detail.files.length - added.length;
-    document.getElementById('status-msg').textContent = skipped
-      ? 'Closet is full: ' + skipped + ' photo' + (skipped === 1 ? '' : 's') + ' skipped (max 10)'
-      : added.length + (added.length === 1 ? ' photo' : ' photos') + ' added to your closet';
+  function currentOutfit() {
+    var pick = function (id) {
+      return Array.prototype.map.call(document.querySelectorAll('#' + id + ' .px-slot[aria-selected="true"]'),
+        function (s) { return s.title; });
+    };
+    return {
+      theme: round.theme,
+      top: pick('panel-tops')[0] || null,
+      bottom: pick('panel-bottoms')[0] || null,
+      dress: pick('panel-dresses')[0] || null,
+      accessories: pick('panel-acc'),
+      savedAt: new Date().toISOString()
+    };
+  }
+
+  function saveOutfit() {
+    var outfit = currentOutfit();
+    try { localStorage.setItem('fip.outfit', JSON.stringify(outfit)); } catch (err) { /* storage blocked */ }
+    // Real game: send `outfit` to the server here so the runway can show everyone's look.
+    return outfit;
+  }
+
+  document.getElementById('lock-btn').addEventListener('click', function () {
+    saveOutfit();
+    locked = true;
+    this.disabled = true;
+    this.textContent = 'Outfit locked in. Waiting for the timer';
+    document.getElementById('status-msg').textContent = 'Outfit saved';
+  });
+
+  // ---------- Avatar ----------
+  // The avatar built in the lobby (skin, hair, hairstyle), dressed live from closet picks.
+  // Shared renderer: avatar.js. Clothes are placeholder pixel shapes until extracted sprites exist.
+  var avatar = document.getElementById('avatar');
+  var stage = document.getElementById('avatar-stage');
+  var look = FIP.store.getAvatar();
+  function drawAvatar() {
+    var o = currentOutfit();
+    FIPAvatar.render(avatar, look, o);
+    var parts = [o.dress, o.top, o.bottom].filter(Boolean).concat(o.accessories);
+    document.getElementById('avatar-caption').textContent = (look.name ? look.name + ': ' : '') +
+      (parts.length ? parts.join(' · ') : 'plain fit');
+  }
+  new ResizeObserver(function () { FIPAvatar.fit(avatar, stage, 16, 56); }).observe(stage);
+  drawAvatar();
+
+  // ---------- Round timer ----------
+  // 60s from when players enter this page (the lobby's Start button will send them here).
+  // Counting down to a fixed end time keeps every player in sync; in multiplayer the server
+  // should broadcast that end time with the theme. Test with a shorter round: demo.html?seconds=10
+  var ROUND_SECONDS = Number(new URLSearchParams(location.search).get('seconds')) || 60;
+  var endsAt = Date.now() + ROUND_SECONDS * 1000;
+  var bar = document.getElementById('timer-bar');
+  var text = document.getElementById('timer-text');
+
+  function tick() {
+    var left = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+    text.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+    bar.style.setProperty('--value', left / ROUND_SECONDS);
+    bar.classList.toggle('is-danger', left <= 10);
+    if (left === 0) {
+      clearInterval(timer);
+      saveOutfit();
+      locked = true;
+      document.getElementById('status-msg').textContent = "Time's up! Outfit saved. Heading to the runway...";
+      try { sessionStorage.setItem('fip.runwayReady', String(Date.now())); } catch (e) { /* storage blocked */ }
+      setTimeout(function () { location.href = 'runway.html'; }, 1500);
+    }
+  }
+  var timer = setInterval(tick, 250);
+  tick();
+
+
+  // Upload.exe: same photos as the lobby (saved in this browser), up to 10
+  FIP.mountUpload({
+    zone: document.getElementById('photo-zone'),
+    thumbs: document.getElementById('photo-thumbs'),
+    count: document.getElementById('photo-count'),
+    status: document.getElementById('status-msg')
   });
 </script>
 </body>

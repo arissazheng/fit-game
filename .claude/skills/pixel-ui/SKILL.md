@@ -76,12 +76,14 @@ new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
 ## Mapping game screens to the desktop
 
 - **Login:** teal desktop with a small centered window `Fashion in Pixels v1.0`. Inside: a `.px-label` EMAIL, a `.px-input`, and an `OK` / `Log in` `.px-btn`. Taskbar shows `Start` + clock.
-- **Lobby:** a big `Runway.exe` window whose body is a `.px-well` showing the pixel stage with players standing on it, each with a name tag. Side window `Players` lists who's in the room. Desktop icons: `Closet`, `Marketplace`, `readme` (how to play). The host gets a `.px-btn--wide` `START SHOW`. When the show starts, the theme appears in a `.px-bubble` from the mascot.
+- **Lobby (`index.html`, the first page):** left column `Avatar.exe` (name, skin tone swatches, hair color swatches, hairstyle buttons, Shuffle) and `Upload.exe` (up to 10 outfit photos). Right: `Lobby.exe` well showing your avatar on the runway floor with a name tag, a players row, and `▶ START GAME`. In the lobby everyone wears the plain outfit (black tank + shorts, no accessories). Start sends all players to the outfit builder.
+- **Avatars:** one shared chibi body for everyone, drawn by `avatar.js` on a 64×96 canvas (big head, closed happy eyes, blush, 1px outline in a darker shade of each color). Only skin tone, hair color, and hairstyle vary. Always render through `FIPAvatar.render()` and scale with `FIPAvatar.fit()` (whole numbers only). `game.js` keeps the look and photos between pages.
 - **Upload closet:** mirror the reference layout. Left `Upload.exe` window with options, right `Preview` well with "Drag & Drop or Click", `.px-progress` while extracting, status bar `3 / 10 photos · 12 items found`.
 - **Outfit builder (60s):** the screen where each player builds their outfit for the round's theme. No star rating, settings, or colorway here; voting happens later in the fashion show.
   - Main window title is the theme, e.g. `THEME: Y2K Pop Star`.
   - Left column: `Closet.exe` window with `.px-tabs` (Tops / Bottoms / Dresses / Acc) and a `.px-slot` grid, then `Upload.exe` (photo dropzone, up to 10 photos) underneath.
-  - Right: the theme window, whose big `.px-well` shows your avatar at integer scale being dressed, plus a `.px-btn--wide` `LOCK IN OUTFIT`.
+  - Right: the theme window, whose big `.px-well` shows your avatar (64×128 canvas, whole-number scale) being dressed live as you click closet items, plus a `.px-btn--wide` `LOCK IN OUTFIT`. This well is not an upload area; uploads only happen in `Upload.exe`.
+  - Timer: 60s countdown to a fixed end time (`.px-progress` + status bar `1:00`), red in the last 10s. At 0:00 the outfit auto-saves and everyone moves to the runway.
   - Top: `.px-progress` timer.
   - Status bar shows the time left and your coin count.
 - **Fashion show / voting:** `Runway.exe` well, one player at a time (back sprite, then a stepped swap to front). Below: five star buttons in a `.px-btn-row`, selected ones navy. Status bar: `Now walking: arissa · 2 / 5`.
