@@ -13,7 +13,7 @@ above the taskbar, and each screen's panels are child windows inside it. The pix
 sit inside those windows.
 
 Tokens and ready-made component classes live in [`pixel-ui.css`](./pixel-ui.css).
-Import it once globally (plus [`pixel-ui.js`](./pixel-ui.js) for tab behavior), then build with its variables and classes. Don't invent
+Import it once globally (plus [`pixel-ui.js`](./pixel-ui.js) for tabs and upload areas), then build with its variables and classes. Don't invent
 new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
 
 ## The look, in one list
@@ -65,6 +65,7 @@ new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
 | Text input | `.px-input` (white, sunken) |
 | Checkbox | `label.px-check` > `input[type=checkbox]` + text (`ON / OFF`) |
 | Preview / stage / avatar viewport | `.px-well` (+ `.px-well__empty` for the empty state) |
+| Upload area (click or drop) | `.px-well.px-dropzone` containing `<input type="file" accept="image/*" multiple>` and a `.px-well__empty` "Drag & Drop or Click" label. With `pixel-ui.js`, clicking **anywhere** in the black box opens the file picker (Enter/Space too), dropping files works, the first image previews in the box, and a `px-files` event delivers the `File` list to your code. Never make only the text clickable. |
 | Inventory grid cell | `.px-slot` (selected: `aria-selected="true"`) |
 | Tabs (closet categories) | `.px-tabs[role=tablist]` > `button.px-tab[role=tab][aria-controls]`, one `.px-tabpanel[role=tabpanel]` per tab. Include [`pixel-ui.js`](./pixel-ui.js), which wires click and arrow-key switching. The open tab is taller and bold and joins the panel. Only the open tab's panel is visible (others get `hidden`), so each category shows only its own items. |
 | Timer / progress | `.px-progress` > `i`, set `--value` 0..1. Add `.is-danger` in the last 10s |
@@ -101,6 +102,7 @@ new colors, fonts, or bevels. [`demo.html`](./demo.html) shows every component.
 - [ ] Selected states are navy fill with white text.
 - [ ] No `border-radius` (except `.px-bubble`), blur, or soft shadows.
 - [ ] Images/canvases are pixelated at integer scales.
+- [ ] Upload areas open the file picker from a click anywhere in the box, and accept dropped images.
 - [ ] Tabs actually switch: clicking one raises it and shows only that category's panel.
 - [ ] Buttons have `:active` pressed and `:focus-visible` (dotted outline) states.
 - [ ] Animations use `steps()` and turn off under `prefers-reduced-motion`.

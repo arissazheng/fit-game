@@ -18,7 +18,7 @@
   .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .px-slot .item { font-size: 32px; line-height: 1; } /* placeholder sprites until real pixel items exist */
   .stars .px-btn { min-width: 48px; font-size: 22px; }
-  .mascot { position: absolute; right: 16px; bottom: 16px; }
+  .mascot { position: absolute; right: 16px; bottom: 16px; z-index: 1; }
   @media (max-width: 860px) {
     .cols { grid-template-columns: minmax(0, 1fr); }
     .mascot { position: static; margin-top: 12px; }
@@ -98,7 +98,8 @@
           <div class="px-titlebar"><span>THEME: Y2K Pop Star</span><span class="px-titlebar__controls"><button>_</button><button>□</button><button>×</button></span></div>
           <div class="px-window__body">
             <div class="px-progress" style="--value:.65"><i></i></div>
-            <div class="px-well stage">
+            <div class="px-well px-dropzone stage" id="upload-zone" aria-label="Upload outfit photos">
+              <input type="file" id="upload-input" accept="image/*" multiple>
               <div class="px-well__empty">🖼<br>Drag &amp; Drop<br>or Click</div>
               <div class="px-bubble mascot">Want to dress up? I'm great at waiting.</div>
             </div>
@@ -110,7 +111,7 @@
         </div>
       </div>
 
-      <div class="px-statusbar"><span>Ready</span><span>0:39</span><span>120 coins</span></div>
+      <div class="px-statusbar"><span id="status-msg">Ready</span><span>0:39</span><span>120 coins</span></div>
     </div>
 
 </div>
@@ -121,5 +122,11 @@
   <button class="px-btn px-taskbar__task" aria-pressed="true">👗 Closet.exe</button>
   <span class="px-taskbar__tray">🔈 17:13</span>
 </div>
+<script>
+  document.getElementById('upload-zone').addEventListener('px-files', function (e) {
+    var n = e.detail.files.length;
+    document.getElementById('status-msg').textContent = n + (n === 1 ? ' photo' : ' photos') + ' imported: ' + e.detail.files[0].name;
+  });
+</script>
 </body>
 </html>
