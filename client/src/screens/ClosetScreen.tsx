@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { Outfit } from '@fit-game/shared'
 import { API_BASE } from '../apiBase'
+import { Avatar } from '../components/Avatar'
 import './ClosetScreen.css'
 
 interface Photo {
@@ -11,12 +13,19 @@ interface Photo {
 
 const MAX_PHOTOS = 10
 
+/** Stand-in outfit: just the pixelized body, no garments (extraction isn't built yet). */
+function previewOutfit(bodyUrl: string): Outfit {
+  return { body: { front: bodyUrl, back: bodyUrl }, equipped: {} }
+}
+
 export function ClosetScreen() {
   const containerRef = useRef<HTMLDivElement>(null)
   const photosRef = useRef<Photo[]>([])
   const [theme] = useState(() => window.FIP.pickTheme())
   const [photos, setPhotos] = useState<Photo[]>([])
   const [statusMsg, setStatusMsg] = useState('Ready')
+  const [avatarBodyUrl, setAvatarBodyUrl] = useState<string | null>(null)
+  const [avatarLoading, setAvatarLoading] = useState(false)
 
   useEffect(() => {
     photosRef.current = photos
@@ -65,11 +74,33 @@ export function ClosetScreen() {
         }),
       )
       setStatusMsg(`${added.length} ${added.length === 1 ? 'photo' : 'photos'} added to your closet`)
+
+      const latest = data.uploads[data.uploads.length - 1]
+      if (latest) requestAvatarPreview(latest.id)
     } catch (err) {
       console.error(err)
       const ids = newPhotos.map((p) => p.id)
       setPhotos((prev) => prev.map((p) => (ids.includes(p.id) ? { ...p, status: 'error' } : p)))
       setStatusMsg("Couldn't upload your photos — try again?")
+    }
+  }, [])
+
+  const requestAvatarPreview = useCallback(async (photoId: string) => {
+    setAvatarLoading(true)
+    try {
+      const res = await fetch(`${API_BASE}/api/avatar/preview`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoId }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Preview failed')
+      setAvatarBodyUrl(`${API_BASE}${data.url}`)
+    } catch (err) {
+      console.error(err)
+      setStatusMsg("Couldn't generate a pixel avatar from that photo.")
+    } finally {
+      setAvatarLoading(false)
     }
   }, [])
 
@@ -258,14 +289,20 @@ export function ClosetScreen() {
                 <div className="px-progress" style={{ ['--value' as string]: 0.65 }}>
                   <i />
                 </div>
-                <div className="px-well px-dropzone stage" aria-label="Outfit preview">
-                  <div className="px-well__empty">
-                    🖼
-                    <br />
-                    Drag &amp; Drop
-                    <br />
-                    or Click
-                  </div>
+                <div
+                  className="px-well stage"
+                  aria-label="Outfit preview"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  {avatarBodyUrl ? (
+                    <Avatar outfit={previewOutfit(avatarBodyUrl)} scale={3} />
+                  ) : (
+                    <div className="px-well__empty">
+                      🖼
+                      <br />
+                      {avatarLoading ? 'Pixelizing your photo…' : 'Upload a photo to see your avatar'}
+                    </div>
+                  )}
                 </div>
                 <button className="px-btn px-btn--wide">↓ Lock in outfit</button>
               </div>

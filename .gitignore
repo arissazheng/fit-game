@@ -12,3 +12,5 @@ dist-ssr
 /data/*.sqlite
 
 .DS_Store
+*.sqlite-wal
+*.sqlite-shm

@@ -2,12 +2,15 @@ import { mkdir } from 'node:fs/promises'
 import express from 'express'
 import { config } from './config.ts'
 import './db/db.ts'
+import { avatarPreviewRouter } from './routes/avatarPreview.ts'
 import { uploadsRouter } from './routes/uploads.ts'
 
 await mkdir(config.uploadsDir, { recursive: true })
 await mkdir(config.processedDir, { recursive: true })
 
 const app = express()
+
+app.use(express.json())
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', 'http://localhost:5173')
@@ -24,6 +27,7 @@ app.get('/api/health', (_req, res) => {
 })
 
 app.use('/api/uploads', uploadsRouter)
+app.use('/api/avatar/preview', avatarPreviewRouter)
 
 app.listen(config.port, () => {
   console.log(`fit-game server listening on http://localhost:${config.port}`)

@@ -44,5 +44,26 @@ Response `400` (friendly, player-facing):
 
 ---
 
+## Avatar preview
+
+### `POST /api/avatar/preview`
+
+`application/json`: `{ "photoId": "<id from /api/uploads>" }`
+
+> Stand-in for the real step-7 "user -> avatar" pipeline (skin/hair tinting,
+> true back view). For now: cover-crops the photo to the avatar's aspect
+> ratio and runs it through the same `pixelize()` module as everything else,
+> so there's a real, visible photo -> pixel-avatar result. No DB row yet —
+> regenerate on demand.
+
+Response `200`:
+```json
+{ "url": "/assets/processed/<photoId>-body.png" }
+```
+
+Response `404` / `500`: friendly, player-facing `{ "error": "..." }`.
+
+---
+
 More endpoints are added here as each build step lands (extraction jobs,
 inventory, wallet, marketplace, outfit scoring).
