@@ -21,7 +21,14 @@
 //     { type: 'room', players: [{ id, name, look, ready, isHost, connected }], phase }
 //     { type: 'start', round: { theme, category, endsAt, seconds } }
 //     { type: 'outfits', round, outfits: [{ id, name, look, outfit }] }
-//     { type: 'runway' }                                 everyone locked in: go to the runway now
+//     { type: 'vote', modelId, stars }                   runway: 1-5 stars for the player on the runway
+//   server -> client (round)
+//     { type: 'runway' }                                 building is over: go to the runway page
+//     { type: 'intro', startsAt, total, theme }          runway about to begin
+//     { type: 'show', index, total, model, endsAt, votes, eligible, myVote, theme }   one player on the runway
+//     { type: 'votes', modelId, votes, eligible }        vote progress for the current model
+//     { type: 'podium', theme, results: [{ id, name, look, outfit, stars, votes, place }] }
+//   Every timed message carries serverNow so browsers can correct for clock differences.
 //     { type: 'error', message }
 
 const http = require('http');
@@ -35,6 +42,10 @@ const STATIC_DIR = path.resolve(__dirname, process.env.STATIC_DIR || '../.claude
 const MAX_PLAYERS = 8;
 const DISCONNECT_GRACE_MS = 20000;   // keep a player while their browser moves between pages
 const ROOM_IDLE_MS = 30 * 60 * 1000;
+const RUNWAY_INTRO_MS = 3000;        // time for everyone's browser to load the runway
+const VOTE_MS = 10000;               // voting time per player on the runway
+const ALL_VOTED_PAUSE_MS = 1500;     // when everyone has voted, move on after this pause
+const SOLO_SHOW_MS = 4000;           // nobody else can vote (1 player): show the look this long
 
 // Themes are shared with the browser (themes.js defines globalThis.FIP).
 require(path.join(STATIC_DIR, 'themes.js'));
@@ -118,20 +129,100 @@ function pickTheme(room) {
   return pick;
 }
 
-// Once every connected player has locked in, end the round early and send everyone to the runway.
+const connectedPlayers = (room) => [...room.players.values()].filter((p) => p.connected);
+
+// ---------- round flow: building -> runway -> podium -> lobby ----------
+
+// Once every connected player has locked in, end building early.
 function checkAllLockedIn(room) {
-  if (room.phase !== 'building' || !room.round || room.round.endedEarly) return;
-  const connected = [...room.players.values()].filter((p) => p.connected);
-  if (connected.length === 0 || !connected.every((p) => room.outfits.has(p.id))) return;
-  room.round.endedEarly = true;
-  room.round.endsAt = Math.min(room.round.endsAt, Date.now());
-  broadcast(room, { type: 'runway' });
+  if (room.phase !== 'building') return;
+  const connected = connectedPlayers(room);
+  if (connected.length && connected.every((p) => room.outfits.has(p.id))) endBuilding(room);
 }
 
-// Back to the lobby once the round is over and someone returns to the lobby page.
+function endBuilding(room) {
+  if (room.phase !== 'building') return;
+  clearTimeout(room.roundTimer);
+  room.round.endsAt = Math.min(room.round.endsAt, Date.now());
+  const order = [...room.outfits.keys()];
+  for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+  room.phase = 'runway';
+  room.runway = { order, index: -1, startsAt: Date.now() + RUNWAY_INTRO_MS, endsAt: 0, votes: new Map(), timer: null, advancing: false };
+  broadcast(room, { type: 'runway' });
+  broadcast(room, introMsg(room));
+  room.runway.timer = setTimeout(() => nextModel(room), RUNWAY_INTRO_MS);
+  broadcastRoom(room);
+}
+
+function introMsg(room) {
+  return { type: 'intro', startsAt: room.runway.startsAt, total: room.runway.order.length, theme: room.round.theme, serverNow: Date.now() };
+}
+
+function modelInfo(room, id) {
+  const o = room.outfits.get(id) || {}, p = room.players.get(id);
+  return { id, name: (p && p.name) || o.name || 'Player', look: (p && p.look) || o.look || {}, outfit: o.outfit || {} };
+}
+const eligibleVoters = (room, modelId) => connectedPlayers(room).filter((p) => p.id !== modelId);
+
+function showMsg(room, forId) {
+  const rw = room.runway, modelId = rw.order[rw.index], votes = rw.votes.get(modelId) || new Map();
+  return {
+    type: 'show', index: rw.index, total: rw.order.length, model: modelInfo(room, modelId), theme: room.round.theme,
+    endsAt: rw.endsAt, votes: votes.size, eligible: eligibleVoters(room, modelId).length,
+    myVote: votes.get(forId) || 0, serverNow: Date.now()
+  };
+}
+function broadcastShow(room) {
+  for (const p of room.players.values()) send(p.socket, showMsg(room, p.id));
+}
+
+function nextModel(room) {
+  if (room.phase !== 'runway') return;
+  const rw = room.runway;
+  clearTimeout(rw.timer);
+  rw.index += 1;
+  rw.advancing = false;
+  if (rw.index >= rw.order.length) return finishRunway(room);
+  const modelId = rw.order[rw.index];
+  rw.votes.set(modelId, new Map());
+  const solo = eligibleVoters(room, modelId).length === 0;
+  rw.endsAt = Date.now() + (solo ? SOLO_SHOW_MS : VOTE_MS);
+  rw.timer = setTimeout(() => nextModel(room), rw.endsAt - Date.now());
+  broadcastShow(room);
+}
+
+// Everyone who can vote has voted: move on after a short pause.
+function checkVotesDone(room) {
+  if (room.phase !== 'runway' || room.runway.index < 0 || room.runway.advancing) return;
+  const rw = room.runway, modelId = rw.order[rw.index];
+  const eligible = eligibleVoters(room, modelId), votes = rw.votes.get(modelId) || new Map();
+  if (eligible.length && eligible.every((p) => votes.has(p.id))) {
+    rw.advancing = true;
+    clearTimeout(rw.timer);
+    rw.timer = setTimeout(() => nextModel(room), ALL_VOTED_PAUSE_MS);
+  }
+}
+
+function finishRunway(room) {
+  const rw = room.runway;
+  const results = rw.order.map((id) => {
+    const votes = rw.votes.get(id) || new Map();
+    let stars = 0; for (const v of votes.values()) stars += v;
+    return Object.assign(modelInfo(room, id), { stars, votes: votes.size });
+  });
+  results.sort((a, b) => b.stars - a.stars || b.votes - a.votes);
+  results.forEach((r, i) => { r.place = i > 0 && r.stars === results[i - 1].stars ? results[i - 1].place : i + 1; });
+  room.phase = 'podium';
+  room.results = { type: 'podium', theme: room.round.theme, results };
+  broadcast(room, room.results);
+  broadcastRoom(room);
+}
+
+// Back to the lobby once the podium has been shown and someone returns to the lobby page.
 function resetIfRoundOver(room) {
-  if (room.phase === 'building' && room.round && (room.round.endedEarly || Date.now() > room.round.endsAt + 3000)) {
+  if (room.phase === 'podium') {
     room.phase = 'lobby';
+    room.runway = null;
     for (const p of room.players.values()) p.ready = false;
   }
 }
@@ -188,8 +279,10 @@ wss.on('connection', (socket) => {
 
     if (msg.type === 'hello') {
       if (!attach(msg.room, msg.id)) return;
-      if (room.phase === 'building' && room.round) send(socket, { type: 'start', round: room.round });
-      if (room.round && room.round.endedEarly) send(socket, { type: 'runway' });
+      if (room.phase === 'building' && room.round) send(socket, { type: 'start', round: room.round, serverNow: Date.now() });
+      if (room.phase === 'runway' || room.phase === 'podium') send(socket, { type: 'runway' });
+      if (room.phase === 'runway') send(socket, room.runway.index < 0 ? introMsg(room) : showMsg(room, player.id));
+      if (room.phase === 'podium') send(socket, room.results);
       broadcastRoom(room);
       return;
     }
@@ -216,11 +309,15 @@ wss.on('connection', (socket) => {
       room.round = { theme: t.theme, category: t.category, seconds, endsAt: Date.now() + seconds * 1000 + 1500 };
       room.phase = 'building';
       room.outfits = new Map();
-      broadcast(room, { type: 'start', round: room.round });
+      clearTimeout(room.roundTimer);
+      // Time's up: browsers auto-submit at 0:00, so allow a moment for late outfits to arrive.
+      room.roundTimer = setTimeout(() => endBuilding(room), room.round.endsAt - Date.now() + 2500);
+      broadcast(room, { type: 'start', round: room.round, serverNow: Date.now() });
       broadcastRoom(room);
     }
 
     if (msg.type === 'outfit') {
+      if (room.phase !== 'building') return;
       const o = msg.outfit || {};
       room.outfits.set(player.id, {
         name: player.name, look: player.look,
@@ -234,6 +331,16 @@ wss.on('connection', (socket) => {
     }
 
     if (msg.type === 'getOutfits') send(socket, outfitsMsg(room));
+
+    if (msg.type === 'vote') {
+      const rw = room.runway;
+      if (room.phase !== 'runway' || !rw || rw.index < 0) return;
+      const modelId = rw.order[rw.index], stars = Math.round(Number(msg.stars));
+      if (msg.modelId !== modelId || player.id === modelId || !(stars >= 1 && stars <= 5)) return;
+      rw.votes.get(modelId).set(player.id, stars);
+      broadcast(room, { type: 'votes', modelId, votes: rw.votes.get(modelId).size, eligible: eligibleVoters(room, modelId).length });
+      checkVotesDone(room);
+    }
   });
 
   socket.on('close', () => {
@@ -241,6 +348,8 @@ wss.on('connection', (socket) => {
     player.connected = false;
     player.socket = null;
     const r = room, p = player;
+    checkAllLockedIn(r);
+    checkVotesDone(r);
     p.dropTimer = setTimeout(() => {
       r.players.delete(p.id);
       if (r.players.size === 0) rooms.delete(r.id); else { broadcastRoom(r); checkAllLockedIn(r); }

@@ -33,7 +33,11 @@ Use a different port with `PORT=8080 npm start`.
 - Players, names, avatars, and Ready states, shared live with everyone in the room.
 - The host (first player in the room) can Start once everyone is ready. The server picks the theme
   and the timer's end time and sends the same round to everyone.
-- Collects each player's outfit (on Lock in or at 0:00) and sends everyone's looks to the runway.
+- Collects each player's outfit (on Lock in or at 0:00). When everyone has locked in, the round ends early.
+- Runs the runway: players walk out one at a time in random order, and everyone else has 10 seconds
+  to vote 1-5 stars (it moves on early once everyone has voted). Then it ranks players by total stars
+  and sends the podium (gold, silver, bronze) to everyone.
+- Timed messages include the server's clock, so timers line up even when computers' clocks differ.
 - A player who reloads or moves between pages keeps their spot for 20 seconds.
 
 Nothing is saved to disk yet: restarting the server clears all rooms. Photos stay in each

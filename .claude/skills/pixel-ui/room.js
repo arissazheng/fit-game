@@ -9,7 +9,8 @@
 //   var room = FIP.joinRoom({ me: { name, look, ready }, onChange: fn(players), onStart: fn(round), onError: fn(msg) });
 //   room.update({ ready: true });   room.start({ seconds: 60 });   room.players();   room.mode  // 'server' | 'local'
 // Outfit builder / runway:
-//   var game = FIP.connectGame({ onStart: fn(round), onOutfits: fn(msg), onRunway: fn(), onRoom: fn(msg) });   game.send({ type: 'outfit', outfit })
+//   var game = FIP.connectGame({ onStart, onOutfits, onRunway, onRoom, onIntro, onShow, onVotes, onPodium, onOffline });
+//   game.send({ type: 'vote', modelId, stars: 4 })   game.send({ type: 'outfit', outfit })
 (function (root) {
   var FIP = root.FIP = root.FIP || {};
   FIP.MAX_PLAYERS = 8;
@@ -38,6 +39,19 @@
     return location.origin + location.pathname.replace(/[^/]*$/, '') + '?room=' + FIP.roomId(true);
   };
 
+  // ---------- clock correction ----------
+  // Computers' clocks can differ by seconds. Timed server messages carry serverNow, so convert
+  // server timestamps (endsAt, startsAt) to this browser's clock before using them.
+  function localize(m) {
+    if (!m || !m.serverNow) return m;
+    var shift = Date.now() - m.serverNow;
+    if (m.endsAt) m.endsAt += shift;
+    if (m.startsAt) m.startsAt += shift;
+    if (m.round && m.round.endsAt) m.round.endsAt += shift;
+    delete m.serverNow;
+    return m;
+  }
+
   // ---------- WebSocket helper ----------
   function openSocket(handlers) {
     if (!/^https?:$/.test(location.protocol)) { setTimeout(handlers.onFail, 0); return null; }
@@ -46,7 +60,7 @@
       try { ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws'); }
       catch (e) { handlers.onFail(); return; }
       ws.onopen = function () { opened = true; handlers.onOpen(); };
-      ws.onmessage = function (e) { var m; try { m = JSON.parse(e.data); } catch (err) { return; } handlers.onMessage(m); };
+      ws.onmessage = function (e) { var m; try { m = JSON.parse(e.data); } catch (err) { return; } handlers.onMessage(localize(m)); };
       ws.onclose = function () {
         if (closedByUs) return;
         if (!opened) { handlers.onFail(); return; }
@@ -160,6 +174,10 @@
         if (m.type === 'start' && handlers.onStart) handlers.onStart(m.round);
         if (m.type === 'outfits' && handlers.onOutfits) handlers.onOutfits(m);
         if (m.type === 'runway' && handlers.onRunway) handlers.onRunway();
+        if (m.type === 'intro' && handlers.onIntro) handlers.onIntro(m);
+        if (m.type === 'show' && handlers.onShow) handlers.onShow(m);
+        if (m.type === 'votes' && handlers.onVotes) handlers.onVotes(m);
+        if (m.type === 'podium' && handlers.onPodium) handlers.onPodium(m);
         if (m.type === 'room' && handlers.onRoom) handlers.onRoom(m);
       },
       onFail: function () { api.online = false; if (handlers.onOffline) handlers.onOffline(); }
