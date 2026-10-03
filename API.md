@@ -47,6 +47,29 @@ Response `400` (friendly, player-facing):
 
 ---
 
+## Pixelize
+
+### `POST /api/photos/:photoId/pixelize`
+
+`photoId` is an id returned from `/api/uploads`. Cover-crops the original
+photo to the avatar's own aspect ratio, then runs it through the same
+`pixelize()` module as everything else (median-cut palette, 1px outline),
+output at exactly `CANVAS` size (64x96 — `shared/src/avatarSpec.ts`, mirroring
+`frontend/avatar.js`), so the result drops in anywhere an avatar sprite would.
+Saved to `/data/processed` and served back at `/assets/processed/<filename>`.
+
+Response `200`:
+```json
+{ "url": "/assets/processed/<photoId>-pixelized.png" }
+```
+
+Response `404` / `500`: friendly, player-facing `{ "error": "..." }`.
+
+`game.js`'s `FIP.mountUpload` already calls this for every uploaded photo and
+swaps the closet thumbnail over to the pixelized result once it's ready.
+
+---
+
 ## Avatar
 
 The live prototype's avatar (`/frontend/avatar.js`) is a
@@ -61,8 +84,9 @@ representation yet. That arrives with step 5/6 (real extracted garment
 sprites) and step 7 (persisted user avatars).
 
 Photos uploaded via `/api/uploads` are already wired into
-`game.js`'s `FIP.mountUpload` (fire-and-forget, alongside its existing
-localStorage persistence) so they survive beyond one browser.
+`game.js`'s `FIP.mountUpload` (alongside its existing localStorage
+persistence) so they survive beyond one browser, and immediately pixelized
+per above.
 
 ---
 

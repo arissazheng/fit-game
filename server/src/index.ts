@@ -2,6 +2,7 @@ import { mkdir } from 'node:fs/promises'
 import express from 'express'
 import { config } from './config.ts'
 import './db/db.ts'
+import { pixelizeRouter } from './routes/pixelize.ts'
 import { uploadsRouter } from './routes/uploads.ts'
 
 await mkdir(config.uploadsDir, { recursive: true })
@@ -28,6 +29,7 @@ app.get('/api/health', (_req, res) => {
 })
 
 app.use('/api/uploads', uploadsRouter)
+app.use('/api/photos', pixelizeRouter)
 
 // The game itself — /frontend's index.html, demo.html, runway.html — served
 // straight off disk. express.static serves index.html for "/" automatically.

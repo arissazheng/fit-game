@@ -11,13 +11,33 @@
   // /server). Only needed if FIP_API_BASE is set to point somewhere else.
   var API_BASE = typeof root.FIP_API_BASE === 'string' ? root.FIP_API_BASE : '';
 
-  // Best-effort: persist the original files server-side too (POST /api/uploads),
-  // alongside the localStorage copy below. Failures here don't block the UI —
-  // the shrunk localStorage copy already carries photos across pages.
-  function syncToServer(files) {
+  // Best-effort: persist the original files server-side (POST /api/uploads),
+  // then pixelize each one at the avatar's own canvas size (frontend/avatar.js's
+  // 64x96 CANVAS, via the same shared pixelize() module the backend uses
+  // everywhere else) so the closet thumbnail becomes a real pixel-art version
+  // of the photo once it's ready. onPixelized(name, url) fires per photo;
+  // failures here don't block the UI — the shrunk localStorage copy (below)
+  // already carries a preview across pages regardless.
+  function syncAndPixelize(files, onPixelized) {
     var formData = new FormData();
     files.forEach(function (f) { formData.append('photos', f); });
     fetch(API_BASE + '/api/uploads', { method: 'POST', body: formData })
+      .then(function (res) { return res.json().then(function (data) {
+        if (!res.ok) throw new Error(data && data.error || 'Upload failed');
+        return data.uploads;
+      }); })
+      .then(function (uploads) {
+        uploads.forEach(function (u, i) {
+          var name = files[i] ? files[i].name : u.originalName;
+          fetch(API_BASE + '/api/photos/' + u.id + '/pixelize', { method: 'POST' })
+            .then(function (res) { return res.json().then(function (data) {
+              if (!res.ok) throw new Error(data && data.error || 'Pixelize failed');
+              return data.url;
+            }); })
+            .then(function (url) { onPixelized(name, API_BASE + url); })
+            .catch(function (err) { console.warn('Could not pixelize ' + name + ':', err); });
+        });
+      })
       .catch(function (err) { console.warn('Could not sync photos to the server:', err); });
   }
 
@@ -60,6 +80,7 @@
   FIP.mountUpload = function (opts) {
     var zone = opts.zone, thumbs = opts.thumbs, count = opts.count, status = opts.status;
     var photos = FIP.store.getPhotos();
+    var pixelizedByName = {}; // name -> backend pixel-art URL, filled in as each one finishes
 
     function say(msg) { if (status) status.textContent = msg; }
     function draw() {
@@ -69,7 +90,7 @@
         slot.className = 'px-slot thumb';
         slot.title = p.name;
         var img = document.createElement('img');
-        img.src = p.dataUrl; img.alt = p.name;
+        img.src = pixelizedByName[p.name] || p.dataUrl; img.alt = p.name;
         var del = document.createElement('button');
         del.className = 'thumb__remove'; del.type = 'button'; del.textContent = '×';
         del.setAttribute('aria-label', 'Remove ' + p.name);
@@ -88,7 +109,7 @@
       var skipped = e.detail.files.length - files.length;
       if (!files.length) { say('Closet is full (max ' + MAX_PHOTOS + ' photos). Remove one to add more.'); return; }
       say('Importing ' + files.length + (files.length === 1 ? ' photo...' : ' photos...'));
-      syncToServer(files);
+      syncAndPixelize(files, function (name, url) { pixelizedByName[name] = url; draw(); });
       Promise.all(files.map(function (f) { return shrink(f, 360); })).then(function (added) {
         photos = photos.concat(added);
         var saved = FIP.store.setPhotos(photos);
